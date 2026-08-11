@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>CMMS Datadores</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--primary:#2563eb;--danger:#dc2626;--success:#16a34a;--warning:#d97706;--bg:#f3f4f6;--surface:#fff;--border:#e5e7eb;--text:#111827;--muted:#6b7280;--bottom-h:64px;--sidebar-w:230px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:5000;display:flex;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+#loginScreen.hidden{display:none}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;width:100%;max-width:480px;text-align:center}
+.login-card h1{margin:0 0 .25rem;font-size:1.5rem;color:var(--primary)}
+.login-card .app-logo{max-width:120px;max-height:80px;margin:0 auto 1rem;border-radius:8px;display:block}
+.login-card p{color:var(--muted);margin-bottom:1.5rem;font-size:.9rem}
+.login-card input{margin-bottom:.75rem;text-align:left;width:100%;padding:.625rem;border:1px solid var(--border);border-radius:6px;font:inherit}
+.login-card button{width:100%;margin-bottom:.5rem}
+.login-error{color:var(--danger);font-size:.85rem;margin-top:.5rem;display:none}
+.login-status{font-size:.8rem;color:var(--muted);margin-top:.75rem}
+.config-toggle{background:none;border:none;color:var(--primary);cursor:pointer;font-size:.85rem;margin-top:.5rem;text-decoration:underline}
+#configPanel{display:none;text-align:left;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
+#configPanel.active{display:block}
+.config-section{margin-bottom:1.25rem}
+.config-section h3{font-size:.95rem;margin:0 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.25rem}
+.config-section label{font-size:.8rem;margin-bottom:.25rem;display:block}
+.config-section input{font-size:.85rem;padding:.5rem;width:100%;border:1px solid var(--border);border-radius:6px}
+.config-section .hint{font-size:.75rem;color:var(--muted);margin-top:.25rem}
+.config-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.logo-preview{max-width:100px;max-height:60px;border-radius:6px;border:1px solid var(--border);margin-top:.5rem;display:none}
+.logo-preview.visible{display:block}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:#111827;color:#fff;display:flex;flex-direction:column;z-index:100;overflow:hidden}
+.sidebar-header{padding:1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-header h1{margin:0;font-size:1rem;color:#fff}
+.sidebar-header small{display:block;font-size:.7rem;color:#9ca3af}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.5rem}
+.sidebar-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:8px;cursor:pointer;font-size:.875rem;font-weight:500;color:#d1d5db;border:none;background:none;width:100%;text-align:left}
+.sidebar-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar-item.active{background:var(--primary);color:#fff}
+.sidebar-item .icon{font-size:1.1rem;width:1.5rem;text-align:center}
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-user strong{font-size:.85rem;color:#fff;display:block}
+.sidebar-user span{font-size:.7rem;color:#9ca3af}
+.btn-logout{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:.3rem .6rem;border-radius:6px;cursor:pointer;font-size:.75rem;margin-top:.5rem;width:100%}
+.main-content{margin-left:var(--sidebar-w);padding:1.5rem;max-width:1200px}
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#111827;color:#fff;z-index:200;padding:0 1rem;align-items:center;justify-content:space-between}
+.mobile-header .mh-left span{font-size:1rem;font-weight:600}
+.mobile-header .mh-right{display:flex;align-items:center;gap:.75rem}
+.mobile-header .mh-user{font-size:.75rem;color:#d1d5db}
+.btn-hamburger{background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;padding:4px 8px}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bottom-h);background:var(--surface);border-top:1px solid var(--border);z-index:300;justify-content:space-around;align-items:center}
+.mobile-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.65rem;font-weight:600;padding:4px 8px;min-width:60px}
+.mobile-nav-btn.active{color:var(--primary)}
+.mobile-nav-btn .icon{font-size:1.4rem}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400}
+.drawer-overlay.active{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:280px;max-width:85vw;background:var(--surface);z-index:500;transform:translateX(100%);transition:transform .3s ease;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,.15)}
+.drawer.active{transform:translateX(0)}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:1rem;border-bottom:1px solid var(--border)}
+.drawer-header h3{margin:0;font-size:1rem}
+.drawer-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--muted)}
+.drawer-nav{flex:1;overflow-y:auto;padding:.5rem}
+.drawer-item{display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:8px;cursor:pointer;font-weight:500;color:var(--text);border:none;background:none;width:100%;text-align:left;font-size:.9rem}
+.drawer-item:hover{background:var(--bg)}
+.drawer-item.active{background:#dbeafe;color:var(--primary)}
+.drawer-item .icon{font-size:1.1rem;width:1.5rem}
+.drawer-footer{padding:1rem;border-top:1px solid var(--border)}
+.drawer-footer button{width:100%;background:#fee2e2;color:var(--danger);border:none;padding:.65rem;border-radius:8px;font-weight:600;cursor:pointer}
+@media(max-width:768px){.sidebar{display:none!important}.main-content{margin-left:0!important;padding:1rem;padding-top:calc(56px + 1rem);padding-bottom:calc(var(--bottom-h) + 1rem)}.mobile-header{display:flex!important}.mobile-nav{display:flex!important}.form-grid{grid-template-columns:1fr}table{min-width:auto}th,td{padding:.5rem;font-size:.8rem}.backup-grid{grid-template-columns:1fr}}
+@media(min-width:769px){.mobile-header{display:none!important}.mobile-nav{display:none!important}.drawer,.drawer-overlay{display:none!important}}
+main{padding:0}
+.view{display:none}.view.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem}
+.card strong{font-size:1.75rem;display:block;margin-top:.25rem;color:var(--primary)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1rem}
+.panel h2{margin-top:0;font-size:1.25rem;border-bottom:1px solid var(--border);padding-bottom:.75rem;margin-bottom:1rem}
+.section-title{background:#fee2e2;color:#b91c1c;font-weight:700;font-size:.8rem;padding:.4rem .75rem;border-radius:6px;margin:1.25rem 0 .75rem;text-transform:uppercase}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+label{display:block;font-size:.875rem;font-weight:600;margin-bottom:.25rem;color:var(--text)}
+input,select,textarea{width:100%;padding:.625rem;border:1px solid var(--border);border-radius:6px;font:inherit;background:#fff}
+textarea{min-height:80px;resize:vertical}
+button{font:inherit;cursor:pointer;border:none;border-radius:6px;padding:.625rem 1rem;font-weight:600}
+.btn-primary{background:var(--primary);color:#fff}.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.btn-danger{background:#fee2e2;color:var(--danger)}.btn-success{background:#dcfce7;color:var(--success)}
+.btn-info{background:#dbeafe;color:#1e40af}
+.btn-outline{background:transparent;border:1px dashed var(--primary);color:var(--primary);margin-top:.25rem;width:100%;text-align:left;font-size:.8rem;padding:.4rem .6rem}
+.btn-sm{padding:.375rem .75rem;font-size:.875rem}
+.table-container{overflow-x:auto;margin-top:1rem;border:1px solid var(--border);border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{padding:.75rem;text-align:left;border-bottom:1px solid var(--border);font-size:.875rem}
+th{background:#f9fafb;font-weight:600;color:var(--muted);white-space:nowrap}
+tr:last-child td{border-bottom:none}tr:hover{background:#f9fafb}
+.clickable-row{cursor:pointer}.clickable-row:hover{background:#eff6ff}
+.badge{display:inline-block;padding:.25rem .625rem;border-radius:999px;font-size:.75rem;font-weight:600}
+.badge-open{background:#dbeafe;color:#1e40af}.badge-progress{background:#fef3c7;color:#92400e}
+.badge-done{background:#dcfce7;color:#166534}.badge-wait{background:#f3f4f6;color:#374151}
+.badge-admin{background:#ede9fe;color:#6d28d9}.badge-tech{background:#dbeafe;color:#1e40af}.badge-view{background:#f3f4f6;color:#374151}
+.badge-active{background:#dcfce7;color:#166534}.badge-inactive{background:#fee2e2;color:#dc2626}
+.badge-interno{background:#ede9fe;color:#6d28d9}.badge-externo{background:#f3f4f6;color:#374151}
+.badge-visita{background:#fff7ed;color:#c2410c}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:1.5rem;overflow-x:auto}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:.75rem 1.25rem;color:var(--muted);font-weight:600;margin-bottom:-2px;white-space:nowrap;cursor:pointer}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-content{display:none}.tab-content.active{display:block}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.75rem;margin-top:1rem}
+.photo-card{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border);aspect-ratio:1;background:#f9fafb}
+.photo-card img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+.photo-card .remove-photo{position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:14px}
+.photo-card .cloud-tag{position:absolute;bottom:4px;left:4px;background:rgba(37,99,235,.9);color:#fff;border-radius:4px;font-size:.6rem;padding:1px 5px}
+.photo-upload{border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);aspect-ratio:1}
+.photo-upload input{display:none}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:6000;display:none;align-items:center;justify-content:center;padding:1rem}
+.lightbox.active{display:flex}
+.lightbox img{max-width:100%;max-height:90vh;border-radius:8px}
+.lightbox-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer}
+.search-input-wrapper{position:relative}
+.search-input-wrapper input{padding-right:2rem}
+.search-hint{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--muted);pointer-events:none}
+.matched-piece-display{margin-top:.25rem;padding:.4rem .6rem;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;font-size:.8rem;color:#1e40af;display:none}
+.matched-piece-display.visible{display:block}
+.timeline{position:relative;padding-left:2rem;margin-top:1rem}
+.timeline::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline-item{position:relative;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.timeline-item:last-child{border-bottom:none}
+.timeline-dot{position:absolute;left:-2rem;top:4px;width:16px;height:16px;border-radius:50%;background:var(--primary);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--primary)}
+.timeline-dot.visita{background:#c2410c;box-shadow:0 0 0 2px #c2410c}
+.timeline-date{font-size:.8rem;color:var(--muted);margin-bottom:.25rem}
+.timeline-title{font-weight:700;font-size:1rem;margin-bottom:.25rem}
+.timeline-body{font-size:.875rem;line-height:1.6}
+.timeline-tags{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.5rem}
+.filters-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;margin-bottom:1rem;padding:1rem;background:var(--bg);border-radius:8px;border:1px solid var(--border)}
+.report-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem;margin-bottom:1rem}
+.report-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem;text-align:center}
+.report-stat .val{font-size:1.5rem;font-weight:700;color:var(--primary)}
+.report-stat .lbl{font-size:.75rem;color:var(--muted);margin-top:.25rem}
+.backup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+.backup-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.backup-card h3{margin:0 0 1rem;font-size:1rem}
+.backup-card .desc{font-size:.85rem;color:var(--muted);margin-bottom:1rem}
+.backup-options{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem}
+.backup-option{display:flex;align-items:center;gap:.5rem;font-size:.875rem}
+.backup-option input{width:auto}
+.backup-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.server-status{display:flex;align-items:center;gap:.5rem;padding:.75rem;background:var(--bg);border-radius:6px;font-size:.85rem;margin-bottom:1rem;flex-wrap:wrap}
+.server-dot{width:10px;height:10px;border-radius:50%;background:#9ca3af;display:inline-block}
+.server-dot.online{background:var(--success)}.server-dot.offline{background:var(--danger)}
+.muted{color:var(--muted)}.flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+.mt-1{margin-top:.5rem}.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.toast{position:fixed;bottom:calc(var(--bottom-h) + 1rem);right:1rem;background:#111827;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-weight:600;z-index:7000;pointer-events:none}
+.field-group{display:flex;flex-direction:column}
+.search-box{margin-bottom:1rem;display:flex;gap:.5rem}.search-box input{flex:1}
+.radio-row{display:flex;flex-wrap:wrap;gap:.75rem;padding:.5rem 0}
+.radio-row label{display:flex;align-items:center;gap:.4rem;font-weight:500;margin:0;cursor:pointer}
+.radio-row input{width:auto}
+.sig-canvas{width:100%;height:150px;border:2px dashed var(--border);border-radius:8px;background:#fff;touch-action:none;cursor:crosshair}
+.qr-box{text-align:center}
+.qr-box img{width:200px;height:200px;border:1px solid var(--border);border-radius:8px;background:#fff}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media print{body{background:#fff}.sidebar,.mobile-header,.mobile-nav,.drawer,.drawer-overlay,.no-print,.tabs,.photo-upload,.remove-photo,.lightbox,#loginScreen,.filters-bar{display:none!important}.main-content{margin-left:0!important;padding:0}.view{display:none!important}#view-os-detail{display:block!important}.panel{border:none;padding:0;box-shadow:none}input,select,textarea{border:none;padding:0;background:transparent;font-size:11pt}table{font-size:10pt}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+<div class="login-card">
+<img id="loginLogo" class="app-logo" style="display:none" alt="Logo">
+<h1 id="loginAppName">🔧 CMMS Datadores</h1>
+<p id="loginSubtitle">Sistema de Gestão de Manutenção</p>
+<input type="email" id="loginEmail" placeholder="E-mail (ex: admin@suaempresa.com.br)">
+<input type="password" id="loginPass" placeholder="Senha">
+<button type="button" class="btn-primary" id="btnLogin" onclick="doLogin()">Entrar</button>
+<div id="loginError" class="login-error"></div>
+<div class="login-status" id="loginStatus"></div>
+<button class="config-toggle" onclick="toggleConfig()">⚙️ Configurações do Sistema</button>
+<div id="configPanel">
+<div class="config-section"><h3>🏷️ Personalização</h3><label>Nome do Aplicativo</label><input type="text" id="cfgAppName" placeholder="CMMS Datadores"><label>Logo da Empresa</label><input type="file" id="cfgLogoInput" accept="image/*" onchange="previewConfigLogo(this)"><img id="cfgLogoPreview" class="logo-preview" alt=""></div>
+<div class="config-section"><h3>☁️ Servidor Supabase</h3><label>Supabase URL</label><input type="url" id="cfgSupabaseUrl" placeholder="https://xxxx.supabase.co"><label>Supabase Anon Key</label><input type="text" id="cfgSupabaseKey" placeholder="eyJhbGciOi..."><p class="hint">Pegue em Settings → API do Supabase.</p></div>
+<div class="config-section"><h3>📸 Fotos na Nuvem (ImgBB — grátis)</h3><label>ImgBB API Key</label><input type="text" id="cfgImgbbKey" placeholder="Cole sua chave API do ImgBB"><p class="hint">Pegue grátis em api.imgbb.com. Sem chave, fotos ficam no aparelho.</p></div>
+<div class="config-actions"><button type="button" class="btn-primary btn-sm" onclick="saveConfigManual()">💾 Salvar e Conectar</button><button type="button" class="btn-secondary btn-sm" onclick="toggleConfig()">Fechar</button></div>
+</div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="appShell" style="display:none">
+<div class="mobile-header"><div class="mh-left"><span id="mobileAppName">CMMS</span></div><div class="mh-right"><span class="mh-user" id="mobileUserName">-</span><button class="btn-hamburger" onclick="toggleDrawer()">☰</button></div></div>
+<aside class="sidebar"><div class="sidebar-header"><h1 id="sidebarAppName">CMMS Datadores</h1><small id="sidebarVersion">Versão 24 • Supabase</small></div><nav class="sidebar-nav" id="sidebarNav"></nav><div class="sidebar-footer"><div class="sidebar-user"><strong id="sidebarUserName">-</strong><span id="sidebarUserRole">-</span></div><button class="btn-logout" onclick="doLogout()">Sair</button></div></aside>
+<div class="main-content">
+<datalist id="dlPecas"></datalist>
+
+<section id="view-dashboard" class="view"><div class="grid" id="dashCards"></div><div class="panel"><h2>📋 Últimas OS</h2><div id="dashOsList"></div></div></section>
+
+<section id="view-visitas" class="view"><div class="panel"><div class="flex-between"><h2 style="margin:0;border:none;padding:0">🚗 Visitas Técnicas</h2><button class="btn-primary" onclick="openVisitaForm()">➕ Nova Visita</button></div><div class="table-container"><table><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Técnico</th><th>Tipo</th><th>Ações</th></tr></thead><tbody id="tbVisitas"></tbody></table></div></div></section>
+
+<section id="view-visita-form" class="view"><div class="no-print flex-between" style="margin-bottom:1rem"><button class="btn-secondary" onclick="navigate('visitas')">← Voltar</button><button class="btn-primary" onclick="saveVisita()">💾 Salvar Visita</button></div><div class="panel"><div class="flex-between"><h2 id="visitaFormTitle" style="margin:0;border:none;padding:0">🚗 Nova Visita Técnica</h2><span id="visitaNumero" class="badge badge-visita"></span></div>
+<div class="section-title">Dados do Cliente / Chamado</div>
+<div class="form-grid"><div class="field-group"><label>Empresa (Cliente) *</label><select id="vCliente" onchange="vClienteChanged()"><option value="">Selecione...</option></select></div><div class="field-group"><label>Equip. Modelo *</label><select id="vEquip" onchange="vEquipChanged()" disabled><option value="">Selecione cliente</option></select></div><div><label>Série</label><input id="vSerie" disabled></div><div><label>Técnico</label><input id="vTecnico"></div><div><label>Contr.Manut.</label><select id="vContrManut"><option value="N">Não</option><option value="S">Sim</option></select></div><div><label>Contato</label><input id="vContato"></div><div><label>Fone</label><input id="vFone"></div><div><label>Endereço</label><input id="vEndereco"></div><div><label>Cidade</label><input id="vCidade"></div><div><label>Estado</label><input id="vEstado"></div><div><label>CEP</label><input id="vCep"></div><div><label>Bairro</label><input id="vBairro"></div><div><label>Depto</label><input id="vDepto"></div></div>
+<div class="section-title">Tipo de Chamada</div>
+<div class="radio-row"><label><input type="radio" name="vTipo" value="Instalação"> Instalação</label><label><input type="radio" name="vTipo" value="Treinamento"> Treinamento</label><label><input type="radio" name="vTipo" value="Manutenção" checked> Manutenção</label><label><input type="radio" name="vTipo" value="Demonstração"> Demonstração</label><label><input type="radio" name="vTipo" value="Outros"> Outros</label></div>
+<div class="form-grid"><div style="grid-column:1/-1"><label>Falha / Motivo do Chamado *</label><textarea id="vFalha"></textarea></div></div>
+<div class="section-title">Serviço Realizado</div><div class="form-grid"><div style="grid-column:1/-1"><textarea id="vServico"></textarea></div></div>
+<div class="section-title">Laudo Técnico</div><div class="form-grid"><div style="grid-column:1/-1"><textarea id="vLaudo"></textarea></div></div>
+<div class="section-title">Despesas / Resumo Geral</div>
+<div class="form-grid"><div><label>Data</label><input type="date" id="vData"></div><div><label>Saída Tesla</label><input type="time" id="vSaidaTesla" onchange="calcHoras()"></div><div><label>Chegada Cliente</label><input type="time" id="vChegadaCliente" onchange="calcHoras()"></div><div><label>Saída Cliente</label><input type="time" id="vSaidaCliente" onchange="calcHoras()"></div><div><label>Chegada Tesla</label><input type="time" id="vChegadaTesla" onchange="calcHoras()"></div><div><label>KM Total</label><input type="number" id="vKm" min="0"></div><div><label>Serviço H.N.</label><input id="vServicoHN"></div><div><label>Serviço H.E.</label><input id="vServicoHE" value="0"></div><div><label>Desloc. H.N.</label><input id="vDeslocHN"></div><div><label>Desloc. H.E.</label><input id="vDeslocHE" value="0"></div></div>
+<div class="section-title">Peça(s) de Reposição Fornecida(s)</div>
+<div class="form-grid" style="grid-template-columns:2fr 1fr auto;align-items:end"><div class="search-input-wrapper"><label>Buscar Peça</label><input id="vPecaSearch" list="dlPecas" placeholder="REF, código ou descrição..." autocomplete="off" oninput="onPecaSearchInput(this,'vMatchPeca')"><span class="search-hint">🔍</span><div id="vMatchPeca" class="matched-piece-display"></div></div><div><label>Quant.</label><input type="number" id="vPecaQtd" min="1" value="1"></div><div><label>&nbsp;</label><button type="button" class="btn-primary btn-sm" onclick="addPecaVisita()">Adicionar</button></div></div>
+<div class="table-container"><table><thead><tr><th>Quant.</th><th>REF Nº</th><th>Part Number</th><th>Descrição</th><th>Ações</th></tr></thead><tbody id="tbPecasVisita"></tbody></table></div>
+<div class="section-title">Observações / Assinatura</div>
+<div class="form-grid"><div style="grid-column:1/-1"><label>Obs.</label><textarea id="vObs"></textarea></div><div><label>Nome por Extenso (Cliente)</label><input id="vNomeExtenso"></div><div><label>Cargo</label><input id="vCargo"></div><div style="grid-column:1/-1"><label>Assinatura do Cliente (opcional)</label><canvas id="vAssinatura" class="sig-canvas"></canvas><button type="button" class="btn-secondary btn-sm mt-1" onclick="clearSig()">🧹 Limpar assinatura</button></div></div>
+</div></section>
+
+<section id="view-backup" class="view"><div class="server-status" id="serverStatus"></div><div class="backup-card"><h3>☁️ Status da Conexão</h3><p class="desc">O sistema está conectado ao Supabase. Todos os dados são salvos na nuvem e sincronizados entre aparelhos em tempo real.</p><div id="connDetail"></div></div><div class="backup-card"><h3>📦 Catálogo de Peças</h3><p class="desc">Recarregar o catálogo oficial do PDF no banco.</p><div class="backup-actions"><button class="btn-info" onclick="loadPdfCatalog()">📦 Sincronizar Catálogo</button></div></div></section>
+
+<section id="view-reports" class="view"><div class="panel"><h2>📊 Relatórios</h2><div class="filters-bar"><div><label>Status</label><select id="fltStatus"><option value="">Todos</option><option>Aberta</option><option>Em análise</option><option>Aguardando peça</option><option>Em manutenção</option><option>Em teste</option><option>Concluída</option><option>Cancelada</option></select></div><div><label>Técnico</label><select id="fltTecnico"><option value="">Todos</option></select></div><div><label>Modelo</label><select id="fltModelo"><option value="">Todos</option><option>BestCode 81</option><option>BestCode 82</option><option>BestCode 86</option><option>BestCode 88</option><option>Quantum</option><option>Famjet TL300DK</option><option>DotJet DJ1</option><option>Outro</option></select></div><div><label>Cliente</label><select id="fltCliente"><option value="">Todos</option></select></div><div><label>Data Início</label><input type="date" id="fltDataIni"></div><div><label>Data Fim</label><input type="date" id="fltDataFim"></div><div style="display:flex;align-items:flex-end;gap:.5rem"><button class="btn-primary btn-sm" onclick="applyFilters()">🔍 Filtrar</button><button class="btn-secondary btn-sm" onclick="clearFilters()">Limpar</button></div></div><div class="report-summary" id="reportSummary"></div><div class="table-container"><table><thead><tr><th>OS</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Defeito</th><th>Técnico</th><th>Status</th></tr></thead><tbody id="tbReport"></tbody></table></div></div></section>
+
+<section id="view-clientes" class="view"><div class="panel" id="panelClienteForm"><h2 id="clientePanelTitle">➕ Novo Cliente</h2><form id="formCliente" class="form-grid"><input type="hidden" name="editId"><div><label>Nome *</label><input name="nome" required></div><div><label>Tipo</label><select name="tipo"><option>Externo</option><option>Interno</option></select></div><div><label>Telefone</label><input name="telefone"></div><div><label>E-mail</label><input name="email" type="email"></div><div><label>Obs</label><input name="obs"></div><div class="flex-between" style="align-items:flex-end"><label>&nbsp;</label><div style="display:flex;gap:.5rem"><button type="button" class="btn-secondary" onclick="resetFormCliente()" style="display:none" id="btnCancelCliente">Cancelar</button><button type="submit" class="btn-primary" id="btnSaveCliente">Salvar</button></div></div></form></div><div class="panel"><h2>Clientes</h2><div class="table-container"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Contato</th><th>Histórico</th><th>Ações</th></tr></thead><tbody id="tbClientes"></tbody></table></div></div></section>
+
+<section id="view-cliente-historico" class="view"><div class="no-print flex-between" style="margin-bottom:1rem"><button class="btn-secondary" onclick="navigate('clientes')">← Voltar</button></div><div class="panel"><h2 id="clienteHistTitle">📋 Histórico</h2><div id="clienteHistContent"></div></div></section>
+
+<section id="view-equipamentos" class="view"><div class="panel" id="panelEquipForm"><h2 id="equipPanelTitle">➕ Novo Equipamento</h2><form id="formEquip" class="form-grid"><input type="hidden" name="editId"><div><label>Nº Série (NS_) *</label><input name="serie" required placeholder="NS_BC86-0001" oninput="autoPrefixNS(this)"></div><div><label>Cliente *</label><select name="cliente_id" id="selEquipCliente" required></select></div><div><label>Marca</label><input name="marca" value="BestCode"></div><div><label>Modelo</label><select name="modelo"><option>BestCode 81</option><option>BestCode 82</option><option>BestCode 86</option><option>BestCode 88</option><option>Quantum</option><option>Famjet TL300DK</option><option>DotJet DJ1</option><option>Outro</option></select></div><div><label>Local</label><input name="local"></div><div><label>Status</label><select name="status"><option>Operante</option><option>Parado</option><option>Em manutenção</option><option>Aguardando peça</option><option>Em teste</option><option>Baixado</option></select></div><div class="flex-between" style="align-items:flex-end"><label>&nbsp;</label><div style="display:flex;gap:.5rem"><button type="button" class="btn-secondary" onclick="resetFormEquip()" style="display:none" id="btnCancelEquip">Cancelar</button><button type="submit" class="btn-primary" id="btnSaveEquip">Salvar</button></div></div></form></div><div class="panel"><h2>Equipamentos</h2><div class="table-container"><table><thead><tr><th>Nº Série</th><th>Cliente</th><th>Modelo</th><th>Status</th><th>QR</th><th>Ações</th></tr></thead><tbody id="tbEquips"></tbody></table></div></div></section>
+
+<section id="view-pecas" class="view"><div class="panel"><div class="flex-between"><h2 style="margin:0;border:none;padding:0">Catálogo de Peças</h2><span class="muted" id="pcCount"></span></div><div class="search-box mt-1"><input type="text" id="searchPecas" placeholder="🔍 Buscar por REF, código ou descrição..." oninput="renderPc()"></div><div class="table-container"><table><thead><tr><th>REF</th><th>Part Number</th><th>Descrição</th><th>Categoria</th><th>Compatível</th></tr></thead><tbody id="tbPecas"></tbody></table></div></div></section>
+
+<section id="view-os" class="view"><div class="panel" id="panelOsForm"><h2>➕ Nova OS</h2><form id="formOS" class="form-grid"><div class="field-group"><label>1. Cliente *</label><select id="osCliente" required><option value="">Selecione...</option></select><button type="button" class="btn-outline" onclick="openModalCliente()">+ Criar cliente</button></div><div class="field-group"><label>2. Equipamento *</label><select id="osEquip" required disabled><option value="">Selecione cliente</option></select><button type="button" class="btn-outline" id="btnNewEquip" onclick="openModalEquip()" disabled>+ Criar equip.</button></div><div><label>Tipo</label><select name="tipo"><option>Corretiva</option><option>Preventiva</option><option>Orçamento</option><option>Teste</option><option>Laudo</option><option>Limpeza</option><option>Garantia</option></select></div><div><label>Técnico</label><input name="tecnico"></div><div><label>Prioridade</label><select name="prioridade"><option>Baixa</option><option selected>Média</option><option>Alta</option><option>Urgente</option></select></div><div style="grid-column:1/-1"><label>Defeito</label><textarea name="defeito"></textarea></div><div class="flex-between" style="align-items:flex-end"><label>&nbsp;</label><button type="submit" class="btn-primary">Abrir OS</button></div></form></div><div class="panel"><h2>Ordens de Serviço</h2><div class="table-container"><table><thead><tr><th>OS</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Defeito</th><th>Status</th></tr></thead><tbody id="tbOs"></tbody></table></div></div></section>
+
+<section id="view-os-detail" class="view"><div class="no-print flex-between" style="margin-bottom:1rem"><button class="btn-secondary" onclick="navigate('os')">← Voltar</button><div style="display:flex;gap:.5rem"><button class="btn-secondary" onclick="window.print()">🖨️ PDF</button><button class="btn-danger btn-sm" id="btnDeleteOs" onclick="excluirOsAtual()">Excluir</button></div></div><div class="panel"><div class="flex-between"><h2 id="detailOsNumero" style="margin:0;border:none;padding:0">OS-0000</h2><span id="detailOsBadge" class="badge badge-open">Aberta</span></div><div class="form-grid mt-2" id="detailOsForm"></div></div><div class="tabs no-print" id="osDetailTabs"></div><div id="tab-laudo" class="tab-content active panel"><h2 class="no-print">Laudo Técnico</h2><form id="formLaudo" class="form-grid"><div><label>Defeito Constatado</label><textarea name="constatado"></textarea></div><div><label>Causa</label><textarea name="causa"></textarea></div><div><label>Testes</label><textarea name="testes"></textarea></div><div><label>Serviços</label><textarea name="servicos"></textarea></div><div><label>Resultado</label><select name="resultado"><option value="">Pendente</option><option>Aprovado</option><option>Reprovado</option><option>Aguardando peça</option></select></div><div style="grid-column:1/-1" class="no-print" id="laudoSaveBtn"><button type="submit" class="btn-primary">💾 Salvar Laudo</button></div></form></div><div id="tab-pecas-uso" class="tab-content panel"><h2>Peças Usadas</h2><form id="formAddPecaUso" class="form-grid" style="grid-template-columns:2fr 1fr auto;align-items:end"><div class="search-input-wrapper"><label>Buscar Peça</label><input name="peca_search" list="dlPecas" autocomplete="off" oninput="onPecaSearchInput(this,'matchUso')"><span class="search-hint">🔍</span><div id="matchUso" class="matched-piece-display"></div></div><div><label>Qtd</label><input name="qtd" type="number" min="1" value="1"></div><div><label>&nbsp;</label><button type="submit" class="btn-success btn-sm">Registrar</button></div></form><div class="table-container mt-1"><table><thead><tr><th>Peça</th><th>Qtd</th><th>Ações</th></tr></thead><tbody id="tbPecasUso"></tbody></table></div></div><div id="tab-fotos" class="tab-content panel"><h2>Fotos</h2><p class="muted" id="fotoModeInfo" style="font-size:.8rem;margin-top:-.5rem"></p><div class="photo-grid" id="photoGrid"><label class="photo-upload" id="photoUploadLabel"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><span style="font-size:2rem">📷</span><span style="font-size:.8rem">Adicionar</span></label></div></div><div id="tab-historico" class="tab-content panel"><h2>📜 Histórico</h2><div id="historicoTimeline"></div></div></section>
+
+<section id="view-users" class="view"><div class="panel"><h2>👥 Usuários</h2><p class="muted">Gerencie usuários diretamente no painel do Supabase (Authentication → Users). Os perfis (admin/técnico/visualizador) são definidos na tabela <code>profiles</code>.</p></div></section>
+<section id="view-perms" class="view"><div class="panel"><h2>🔒 Permissões</h2><p class="muted">As permissões são controladas pelo RLS do Supabase com base no campo <code>role</code> da tabela <code>profiles</code>:</p><ul><li><b>admin</b> — acesso total (criar, editar, excluir)</li><li><b>tecnico</b> — criar e editar, sem excluir</li><li><b>visualizador</b> — apenas leitura</li></ul><p class="muted mt-1">Para alterar o perfil de um usuário, edite a coluna <code>role</code> dele em <b>Table Editor → profiles</b> no Supabase.</p></div></section>
+</div>
+<nav class="mobile-nav" id="mobileNav"></nav>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer"><div class="drawer-header"><h3>Menu</h3><button class="drawer-close" onclick="closeDrawer()">✕</button></div><nav class="drawer-nav" id="drawerItems"></nav><div class="drawer-footer"><button onclick="doLogout()">🚪 Sair</button></div></div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()"><button class="lightbox-close" onclick="closeLightbox()">&times;</button><img id="lightboxImg" src="" alt=""></div>
+<div id="modalCliente" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5500;align-items:center;justify-content:center;padding:1rem"><div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:500px;width:100%"><h3 style="margin-top:0">⚡ Cliente Rápido</h3><form id="formQuickCliente" class="form-grid" style="grid-template-columns:1fr"><div><label>Nome *</label><input name="nome" required></div><div><label>Tipo</label><select name="tipo"><option>Externo</option><option>Interno</option></select></div><div><label>Telefone</label><input name="telefone"></div><div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem"><button type="button" class="btn-secondary" onclick="closeModal('modalCliente')">Cancelar</button><button type="submit" class="btn-primary">Criar</button></div></form></div></div>
+<div id="modalEquip" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5500;align-items:center;justify-content:center;padding:1rem"><div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:500px;width:100%"><h3 style="margin-top:0">⚡ Equipamento Rápido</h3><p class="muted" id="modalEquipCliente" style="margin-top:-.5rem"></p><form id="formQuickEquip" class="form-grid" style="grid-template-columns:1fr"><input type="hidden" name="cliente_id" id="quickEquipClienteId"><div><label>Nº Série *</label><input name="serie" required placeholder="NS_BC86-0001" oninput="autoPrefixNS(this)"></div><div><label>Modelo</label><select name="modelo"><option>BestCode 81</option><option>BestCode 82</option><option>BestCode 86</option><option>BestCode 88</option><option>Quantum</option><option>Famjet TL300DK</option><option>DotJet DJ1</option><option>Outro</option></select></div><div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem"><button type="button" class="btn-secondary" onclick="closeModal('modalEquip')">Cancelar</button><button type="submit" class="btn-primary">Criar</button></div></form></div></div>
+<div id="modalQr" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5500;align-items:center;justify-content:center;padding:1rem"><div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:500px;width:100%"><h3 style="margin-top:0">🔲 QR Code do Equipamento</h3><div class="qr-box" id="qrContent"></div><div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem"><button class="btn-secondary" onclick="closeModal('modalQr')">Fechar</button><button class="btn-primary" onclick="printQrLabel()">🖨️ Imprimir Etiqueta</button></div></div></div>
+<div id="toast" class="toast" style="display:none"></div>
+
+<script>
+/* ============================================================
+   CMMS DATADORES v24 — SUPABASE
+   Config: lê cmms-config.json da raiz OU tela de config manual
+   ============================================================ */
+
+const K_CFG='cmms_config_v24';
+let CFG={supabaseUrl:'',supabaseKey:'',imgbbKey:'',appName:'CMMS Datadores',logo:''};
+let sb=null;            // supabase client
+let ME=null;            // meu profile {id,nome,login,role,ativo}
+let DATA={clientes:[],equipamentos:[],pecas:[],os:[],visitas:[]};
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2600)}
+function fmtD(d){return d?new Date(d).toLocaleString('pt-BR'):'-'}
+function fmtDS(d){return d?new Date(d).toLocaleDateString('pt-BR'):'-'}
+
+/* ---------- CONFIG: arquivo JSON da raiz + localStorage ---------- */
+function saveCfgLocal(){localStorage.setItem(K_CFG,JSON.stringify(CFG))}
+function loadCfgLocal(){try{const r=localStorage.getItem(K_CFG);if(r)Object.assign(CFG,JSON.parse(r))}catch(e){}}
+
+async function tryLoadConfigFile(){
+  // Tenta buscar cmms-config.json na mesma pasta do HTML
+  try{
+    const resp=await fetch('cmms-config.json',{cache:'no-cache'});
+    if(resp.ok){
+      const j=await resp.json();
+      if(j.supabaseUrl)CFG.supabaseUrl=j.supabaseUrl;
+      if(j.supabaseKey)CFG.supabaseKey=j.supabaseKey;
+      if(j.imgbbKey)CFG.imgbbKey=j.imgbbKey;
+      if(j.appName)CFG.appName=j.appName;
+      if(j.logo)CFG.logo=j.logo;
+      saveCfgLocal();
+      return true;
+    }
+  }catch(e){/* arquivo não existe — normal */}
+  return false;
+}
+
+function applyVisualConfig(){
+  const n=CFG.appName||'CMMS Datadores';
+  document.title=n;
+  const la=$('loginAppName');if(la)la.textContent='🔧 '+n;
+  const sa=$('sidebarAppName');if(sa)sa.textContent=n;
+  const ma=$('mobileAppName');if(ma)ma.textContent=n;
+  if(CFG.logo){['loginLogo'].forEach(id=>{const e=$(id);if(e){e.src=CFG.logo;e.style.display='block'}})}
+}
+
+function initSupabaseClient(){
+  if(CFG.supabaseUrl && CFG.supabaseKey && window.supabase){
+    try{ sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey); return true; }
+    catch(e){ console.error('Supabase init error:',e); sb=null; }
+  }
+  return false;
+}
+
+/* ---------- TELA DE CONFIG MANUAL ---------- */
+function toggleConfig(){$('configPanel').classList.toggle('active');$('cfgAppName').value=CFG.appName||'';$('cfgSupabaseUrl').value=CFG.supabaseUrl||'';$('cfgSupabaseKey').value=CFG.supabaseKey||'';$('cfgImgbbKey').value=CFG.imgbbKey||'';if(CFG.logo){$('cfgLogoPreview').src=CFG.logo;$('cfgLogoPreview').classList.add('visible')}else $('cfgLogoPreview').classList.remove('visible')}
+let tempLogo=null;
+function previewConfigLogo(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=function(e){const img=new Image();img.onload=function(){const c=document.createElement('canvas');let w=img.width,h=img.height,m=300;if(w>m||h>m){if(w>h){h=h*(m/w);w=m}else{w=w*(m/h);h=m}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);tempLogo=c.toDataURL('image/png',0.8);$('cfgLogoPreview').src=tempLogo;$('cfgLogoPreview').classList.add('visible')};img.src=e.target.result};r.readAsDataURL(f)}
+async function saveConfigManual(){
+  CFG.appName=$('cfgAppName').value.trim()||'CMMS Datadores';
+  CFG.supabaseUrl=$('cfgSupabaseUrl').value.trim();
+  CFG.supabaseKey=$('cfgSupabaseKey').value.trim();
+  CFG.imgbbKey=$('cfgImgbbKey').value.trim();
+  if(tempLogo)CFG.logo=tempLogo;
+  saveCfgLocal();applyVisualConfig();
+  if(initSupabaseClient()){toast('✅ Conectado! Fazendo login...');await startApp()}
+  else{toast('⚠️ Preencha URL e Key do Supabase.')}
+}
+
+/* ---------- AUTH (Supabase) ---------- */
+async function doLogin(){
+  const email=$('loginEmail').value.trim();
+  const pass=$('loginPass').value;
+  const err=$('loginError');err.style.display='none';
+  if(!CFG.supabaseUrl||!CFG.supabaseKey){err.textContent='Configure o Supabase primeiro (⚙️ Configurações).';err.style.display='block';return}
+  if(!sb)initSupabaseClient();
+  if(!sb){err.textContent='Falha ao conectar ao Supabase. Verifique URL e Key.';err.style.display='block';return}
+  $('btnLogin').disabled=true;$('btnLogin').innerHTML='<span class="spinner"></span> Entrando...';
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error)throw error;
+    await startApp();
+  }catch(e){
+    err.textContent='Login falhou: '+(e.message||e);err.style.display='block';
+    $('btnLogin').disabled=false;$('btnLogin').textContent='Entrar';
+  }
+}
+
+async function startApp(){
+  try{
+    const {data:{user}}=await sb.auth.getUser();
+    if(!user)throw new Error('Sessão inválida');
+    // busca meu profile
+    const {data:prof,error:perr}=await sb.from('profiles').select('*').eq('id',user.id).single();
+    if(perr||!prof)throw new Error('Profile não encontrado. Rode o SQL e crie o usuário no Supabase.');
+    if(!prof.ativo){alert('Usuário inativo.');await sb.auth.signOut();location.reload();return}
+    ME=prof;
+    $('loginScreen').classList.add('hidden');
+    $('appShell').style.display='block';
+    const rl={admin:'Admin',tecnico:'Técnico',visualizador:'Visualizador'};
+    $('sidebarUserName').textContent=ME.nome;$('sidebarUserRole').textContent=rl[ME.role]||ME.role;
+    $('mobileUserName').textContent=ME.nome.split(' ')[0];
+    buildAllNavs();
+    await loadAllData();
+    setupRealtime();
+    navigate(getDefaultView());
+    $('btnLogin').disabled=false;$('btnLogin').textContent='Entrar';
+  }catch(e){
+    $('loginError').textContent='Erro ao iniciar: '+e.message;$('loginError').style.display='block';
+    $('btnLogin').disabled=false;$('btnLogin').textContent='Entrar';
+  }
+}
+
+async function doLogout(){await sb.auth.signOut();location.reload()}
+
+/* ---------- DADOS (CRUD Supabase) ---------- */
+async function loadAllData(){
+  const [c,e,p,o,v]=await Promise.all([
+    sb.from('clientes').select('*').order('nome'),
+    sb.from('equipamentos').select('*').order('serie'),
+    sb.from('pecas').select('*').order('descricao'),
+    sb.from('ordens_servico').select('*').order('data_abertura',{ascending:false}),
+    sb.from('visitas').select('*').order('criado_em',{ascending:false})
+  ]);
+  DATA.clientes=c.data||[];DATA.equipamentos=e.data||[];DATA.pecas=p.data||[];DATA.os=o.data||[];DATA.visitas=v.data||[];
+  rebuildPecasDatalist();
+}
+
+function setupRealtime(){
+  sb.channel('cmms-all')
+    .on('postgres_changes',{event:'*',schema:'public',table:'clientes'},()=>reloadTable('clientes'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'equipamentos'},()=>reloadTable('equipamentos'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'pecas'},()=>reloadTable('pecas'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'ordens_servico'},()=>reloadTable('ordens_servico','os'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'visitas'},()=>reloadTable('visitas'))
+    .subscribe();
+}
+async function reloadTable(table,key){
+  const map={clientes:'clientes',equipamentos:'equipamentos',pecas:'pecas',ordens_servico:'os',visitas:'visitas'};
+  const order={clientes:'nome',equipamentos:'serie',pecas:'descricao',ordens_servico:'data_abertura',visitas:'criado_em'};
+  const asc=!(table==='ordens_servico'||table==='visitas');
+  const {data}=await sb.from(table).select('*').order(order[table],{ascending:asc});
+  DATA[map[table]]=data||[];
+  if(table==='pecas')rebuildPecasDatalist();
+  // re-renderiza views visíveis
+  const vis=document.querySelector('.view.active');if(vis)refreshCurrentView(vis.id);
+}
+function refreshCurrentView(id){
+  if(id==='view-dashboard')renderDash();
+  else if(id==='view-clientes')renderCli();
+  else if(id==='view-equipamentos')renderEq();
+  else if(id==='view-pecas')renderPc();
+  else if(id==='view-os')renderOsList();
+  else if(id==='view-visitas')renderVisitas();
+  else if(id==='view-reports')applyFilters();
+  else if(id==='view-backup')renderBackup();
+}
+
+/* ---------- HELPERS DE PERMISSÃO ---------- */
+function can(k){if(!ME)return false;if(ME.role==='admin')return true;const m={create_cliente:1,edit_cliente:1,create_equip:1,edit_equip:1,create_peca:1,edit_peca:1,create_os:1,edit_os:1,fill_laudo:1,add_peca_os:1,upload_foto:1,create_visita:1,edit_visita:1,export_backup:1,view_dashboard:1,view_clientes:1,view_equipamentos:1,view_pecas:1,view_os:1,view_reports:1,view_visitas:1,view_backup:1,print_os:1,remove_foto:1,remove_peca_os:1};return !!m[k]}
+function canDelete(){return ME&&ME.role==='admin'}
+
+/* ---------- IMGBB ---------- */
+function uploadToImgBB(b64,cb){if(!CFG.imgbbKey){cb(null);return}const raw=b64.indexOf(',')>=0?b64.split(',')[1]:b64;const fd=new FormData();fd.append('image',raw);fetch('https://api.imgbb.com/1/upload?key='+encodeURIComponent(CFG.imgbbKey),{method:'POST',body:fd}).then(r=>r.json()).then(d=>cb(d&&d.success&&d.data?d.data.url:null)).catch(()=>cb(null))}
+
+/* ---------- NAV ---------- */
+function getMenuItems(){const i=[];if(can('view_visitas'))i.push({id:'visitas',label:'Visitas',icon:'🚗',mm:1,mo:0});if(can('view_os'))i.push({id:'os',label:'OS',icon:'🔧',mm:1,mo:1});if(can('view_dashboard'))i.push({id:'dashboard',label:'Dash',icon:'📊',mm:1,mo:2});if(can('view_clientes'))i.push({id:'clientes',label:'Clientes',icon:'👥'});if(can('view_equipamentos'))i.push({id:'equipamentos',label:'Equip.',icon:'🖥️'});if(can('view_pecas'))i.push({id:'pecas',label:'Peças',icon:'🔩'});if(can('view_reports'))i.push({id:'reports',label:'Relatórios',icon:'📊'});if(can('view_backup'))i.push({id:'backup',label:'Backup',icon:'☁️'});if(ME&&ME.role==='admin'){i.push({id:'users',label:'Usuários',icon:'👤'});i.push({id:'perms',label:'Permissões',icon:'🔒'})}return i}
+function buildAllNavs(){const items=getMenuItems();const dO=['dashboard','os','visitas','clientes','equipamentos','pecas','reports','backup','users','perms'];const sorted=items.slice().sort((a,b)=>{const ai=dO.indexOf(a.id),bi=dO.indexOf(b.id);return(ai<0?99:ai)-(bi<0?99:bi)});$('sidebarNav').innerHTML=sorted.map(it=>`<button class="sidebar-item" onclick="navigate('${it.id}',this)" data-nav="${it.id}"><span class="icon">${it.icon}</span>${it.label}</button>`).join('');const mm=items.filter(x=>x.mm).sort((a,b)=>a.mo-b.mo);$('mobileNav').innerHTML=mm.map(m=>`<button class="mobile-nav-btn" onclick="navigate('${m.id}',this)" data-nav="${m.id}"><span class="icon">${m.icon}</span>${m.label}</button>`).join('')+`<button class="mobile-nav-btn" onclick="toggleDrawer()"><span class="icon">☰</span>Mais</button>`;$('drawerItems').innerHTML=items.filter(x=>!x.mm).map(it=>`<button class="drawer-item" onclick="navigate('${it.id}');closeDrawer()" data-nav="${it.id}"><span class="icon">${it.icon}</span>${it.label}</button>`).join('')}
+function updateActiveNav(v){document.querySelectorAll('.sidebar-item,.drawer-item').forEach(b=>b.classList.toggle('active',b.getAttribute('data-nav')===v));document.querySelectorAll('.mobile-nav-btn[data-nav]').forEach(b=>b.classList.toggle('active',b.getAttribute('data-nav')===v))}
+function toggleDrawer(){$('drawer').classList.toggle('active');$('drawerOverlay').classList.toggle('active')}
+function closeDrawer(){$('drawer').classList.remove('active');$('drawerOverlay').classList.remove('active')}
+function navigate(v){const pm={dashboard:'view-dashboard',reports:'view-reports',visitas:'view-visitas',clientes:'view-clientes',equipamentos:'view-equipamentos',pecas:'view-pecas',os:'view-os',backup:'view-backup',users:'view-users',perms:'view-perms'};if(pm[v]&&!can(v)){toast('⛔ Sem permissão');return}document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));const t=$(pm[v]);if(t)t.classList.add('active');updateActiveNav(v);refreshCurrentView(pm[v]);closeDrawer()}
+function getDefaultView(){if(window.innerWidth<=768){if(can('view_visitas'))return'visitas';if(can('view_os'))return'os';return'dashboard'}return'dashboard'}
+function switchTab(t,btn){document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));const t2=$('tab-'+t);if(t2)t2.classList.add('active');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active')}
+function badge(s){const m={'Aberta':'badge-open','Em análise':'badge-progress','Aguardando peça':'badge-wait','Em manutenção':'badge-progress','Em teste':'badge-progress','Concluída':'badge-done','Cancelada':'badge-wait'};return`<span class="badge ${m[s]||'badge-wait'}">${esc(s)}</span>`}
+function popSel(id,items,vk,lf,ph){const s=$(id);if(!s)return;s.innerHTML=`<option value="">${ph||'Selecione...'}</option>`+items.map(i=>`<option value="${i[vk]}">${esc(lf(i))}</option>`).join('')}
+function autoPrefixNS(i){const v=i.value;if(v&&v.toUpperCase().indexOf('NS_')!==0&&v.length>=1&&'NS_'.indexOf(v.toUpperCase())!==0)i.value='NS_'+v}
+
+/* ---------- PEÇAS DATALIST ---------- */
+function rebuildPecasDatalist(){$('dlPecas').innerHTML=DATA.pecas.map(p=>`<option value="${esc(p.codigo)}">${p.ref?p.ref+' | ':''}${esc(p.codigo)} - ${esc(p.descricao)}</option>`).join('')}
+function findPiece(t){if(!t)return null;t=t.trim().toLowerCase();let i;for(i=0;i<DATA.pecas.length;i++){if(DATA.pecas[i].codigo.toLowerCase()===t)return DATA.pecas[i]}for(i=0;i<DATA.pecas.length;i++){if((DATA.pecas[i].ref||'').toLowerCase()===t)return DATA.pecas[i]}for(i=0;i<DATA.pecas.length;i++){if(DATA.pecas[i].codigo.toLowerCase().indexOf(t)>=0)return DATA.pecas[i]}for(i=0;i<DATA.pecas.length;i++){if((DATA.pecas[i].ref||'').toLowerCase().indexOf(t)>=0)return DATA.pecas[i]}for(i=0;i<DATA.pecas.length;i++){if(DATA.pecas[i].descricao.toLowerCase().indexOf(t)>=0)return DATA.pecas[i]}return null}
+function onPecaSearchInput(i,mid){const d=$(mid);if(!d)return;const p=findPiece(i.value);if(p){d.textContent='✅ '+(p.ref?p.ref+' | ':'')+p.codigo+' — '+p.descricao;d.classList.add('visible');d.setAttribute('data-peca-id',p.id)}else{d.textContent=i.value.trim()?'❌ Não encontrada':'';d.classList.toggle('visible',!!i.value.trim());d.removeAttribute('data-peca-id')}}
+
+/* ---------- CATÁLOGO (sync pro banco) ---------- */
+async function loadPdfCatalog(){
+  if(!can('create_peca')&&!canDelete()){toast('⛔ Sem permissão');return}
+  const C=[
+['1012','A22002','Tampa Superior da impressora','Estrutura','Série 8'],['702','29-0002-04','Membrana da Tela Série 8','Estrutura','Série 8'],['-','A22005','Tampa inferior da impressora','Estrutura','Série 8'],['-','28-0047-01','Parafuso da Porta de Serviços Hidráulicos Série 8','Estrutura','Série 8'],['-','A22003','Carcaça Cabeça de Impressão','Estrutura','Série 8'],['-','25-0004-06','Porta de Serviços Hidráulicos Série 8','Estrutura','Série 8'],['-','A21005','Carcaça Interna Cabeça de Impressão','Estrutura','Série 8'],['1033','27-0005-04W','Tampa do Copo de Diluente Série 8','Estrutura','Série 8'],['-','A22004','Placa Guia/Proteção','Estrutura','Série 8'],['1032','27-0005-04B','Tampa do Copo de Tinta Série 8','Estrutura','Série 8'],['672','F22001','Membrana','Estrutura','Série 8'],
+['-','B22002','Placa Controladora CPU','Eletrônica','Série 8'],['386','13-9004-01','Bateria RTC Placa Principal','Eletrônica','Série 8'],['-','B21002','Placa de Comunicação','Eletrônica','Série 8'],['760','19-0101-01','PCI, CPU 81','Eletrônica','BestCode 81'],['-','B21001','Placa da Cabeçote de Impressão','Eletrônica','Série 8'],['620','19-0093-01','PCI, CPU 82','Eletrônica','BestCode 82'],['-','B22001','Placa de tela (LCD28_BK)','Eletrônica','Série 8'],['494','19-0094-01','PCI, CPU 86','Eletrônica','BestCode 86'],['-','E22001','Display de 2,8"','Eletrônica','Série 8'],['429','19-0102-01','PCI, CPU 87','Eletrônica','BestCode 87'],['-','FSP040-RHAN2','Fonte de Alimentação','Eletrônica','Série 8'],['619','19-0095-01','PCI, CPU 88','Eletrônica','BestCode 88'],['-','IC-MLC05-40','Cabo Flat 40 vias','Eletrônica','Série 8'],['-','19-0096-01','PCI, CPU 88 High Speed','Eletrônica','BestCode 88'],['-','IC-MLC05-20','Cabo Flat 20 vias','Eletrônica','Série 8'],['-','19-0097-01','PCI, CPU 88 Opaque','Eletrônica','BestCode 88'],['-','-','Alça de Travamento (Alavanca)','Eletrônica','Série 8'],['-','19-0098-01','PCI, CPU 88 Food Grade','Eletrônica','BestCode 88'],['1253','PAS-288-M875','Bloco de Cruzamento','Eletrônica','Série 8'],['-','19-0099-01','PCI, CPU 88 Micro','Eletrônica','BestCode 88'],['-','19-0100-01','PCI, CPU 88 High Speed One','Eletrônica','BestCode 88'],['309','18-0001-03','Fonte de Alimentação Série 8','Eletrônica','Série 8'],['967','20-5015-01','Display LCD Touch Screen 10.4" Série 8 (não inclui placa PCB)','Eletrônica','Série 8 2020'],['995','19-0023-01','Placa PCB do Display Série 8 2020','Eletrônica','Série 8 2020'],['-','16-0032-01','Cabo Flat do Display Série 8','Eletrônica','Série 8'],['568','18-0002-01','Ventilador Série 8','Eletrônica','Série 8'],
+['495','32-0001-01','Bomba de Tinta Fluid-o-Tech Série 8','Eletrohidráulica','Série 8'],['-','32-5005-01','Bomba de Tinta Diener Série 8','Eletrohidráulica','Série 8'],['950','32-0003-01','Bomba de Tinta Micropump Opaque Série 8','Eletrohidráulica','Série 8'],['951','33-0001-01','Válvula 2 vias Série 8','Eletrohidráulica','Série 8'],['-','21-0008-01',"O'ring da Válvula 2 vias Série 8",'Eletrohidráulica','Série 8'],['-','16-0018-08','Chicote das Válvulas Série 8','Eletrohidráulica','Série 8'],['893','34-0003-02','Transdutor de Pressão Série 8','Eletrohidráulica','Série 8'],['703','20-0015-01','Viscosímetro Série 8','Eletrohidráulica','Série 8'],['339','34-0001-05','Sensor de Nível de Tinta Série 8','Eletrohidráulica','Série 8'],['497','34-0002-03','Sensor de Nível de Diluente Série 8','Eletrohidráulica','Série 8'],['578','20-0024-01','Copo de Abastecimento Smartfill Tinta Série 8','Eletrohidráulica','Série 8'],['665','20-0025-01','Copo de Abastecimento Smartfill Diluente Série 8','Eletrohidráulica','Série 8'],['876','20-0031-01','Leitor SmartFilter Série 8','Eletrohidráulica','Série 8'],
+['952','20-0012-01','Reservatório de Tinta Série 8','Hidráulico','Série 8'],['953','20-0013-01','Reservatório de Diluente Série 8','Hidráulico','Série 8'],['1038','20-5011-01','Venturi 40PSI GEN1 Série 8','Hidráulico','Série 8'],['966','20-5032-01','Venturi 40PSI GEN2 Série Next 8','Hidráulico','Next 8'],['-','23-0034-01','Tubo de Retorno do Venturi Série 8','Hidráulico','Série 8'],['-','27-0022-05','Tubo Pescador de Tinta Série 8','Hidráulico','Série 8'],['-','27-0024-01','Tubo de Retorno do Viscosímetro Série 8','Hidráulico','Série 8'],['-','27-0023-01','Tubo Pescador de Diluente Série 8','Hidráulico','Série 8'],['965','20-0040-01','Damper Série 8','Hidráulico','Série 8'],['-','20-0039-01','Bloco de Válvulas GEN1 Série 8','Hidráulico','Série 8'],['-','20-0040-01','Bloco de Válvulas GEN2 Série Next 8','Hidráulico','Next 8'],
+['164','31-5055-02','Kit de Filtros 81 2.000h Série 8','Filtros','BestCode 81'],['333','31-5053-02','Kit de Filtros 82/86/87/88 2.000h Série 8','Filtros','BestCode 82/86/87/88'],['334','31-5051-02','Kit de Filtros 82/86/87/88 5.000h Série 8','Filtros','BestCode 82/86/87/88'],['335','31-5050-02','Kit de Filtros 88 10.000h Série 8','Filtros','BestCode 88'],['336','31-5054-01','Kit de Filtros 88S Opaque 2.000h Série 8','Filtros','BestCode 88S'],['1014','31-0023-01','Filtro Pré-Bomba Série 8','Filtros','Série 8'],['-','31-0021-01','Filtro de Diluente Série 8','Filtros','Série 8'],['-','20-0019-01','Filtro Pré-Cabeça Série 8','Filtros','Série 8'],['761','46-5004-01','Suporte do Filtro de Ar Série 8','Filtros','Série 8'],['577','46-0004-01','Filtro de Ar Série 8','Filtros','Série 8'],
+['-','-','Mangueira do Gerador de Gotas Série 8','Cabeçote/Umbilical','Série 8'],['-','25-0001-12','Suporte do Gerador de Gotas Série 8','Cabeçote/Umbilical','Série 8'],['466','20-5008-02','Gerador de Gotas 65µm Série 8','Cabeçote/Umbilical','Série 8'],['700','20-0023-01','Gerador de Gotas 75µm Série 8','Cabeçote/Umbilical','Série 8'],['845','22-0029-01','Bico 65µm Série 8','Cabeçote/Umbilical','Série 8'],['954','22-0030-01','Bico 75µm Série 8','Cabeçote/Umbilical','Série 8'],['1232','21-0001-08',"O'ring do bico Série 8",'Cabeçote/Umbilical','Série 8'],['701','20-0016-02','Umbilical Completo GEN1 Série 8','Cabeçote/Umbilical','Série 8'],['701','20-0033-03','Umbilical Completo GEN2 Série Next 8','Cabeçote/Umbilical','Next 8'],['997','33-0002-01','Válvula do Cabeçote 3 vias Série 8','Cabeçote/Umbilical','Série 8'],['-','20-0037-01','Bloco da Válvula do Cabeçote GEN1 Série 8','Cabeçote/Umbilical','Série 8'],['749','20-0038-01','Bloco da Válvula do Cabeçote GEN2 Série Next 8','Cabeçote/Umbilical','Next 8'],['1022','20-0041-01','Sensor de Temperatura do Cabeçote GEN1/GEN2','Cabeçote/Umbilical','Série 8/Next 8'],['445','22-0083-01','Sensor de Tubo de Retorno Série 8','Cabeçote/Umbilical','Série 8'],['338','22-0010-13','Tubo de Retorno Série 8 (inclui nova chapa de suporte)','Cabeçote/Umbilical','Série 8'],['608','16-0023-02','Cabo Coaxial 3 metros Série 8','Cabeçote/Umbilical','Série 8'],['-','22-0038-04','Capa Traseira do Cabeçote Série 8','Cabeçote/Umbilical','Série 8'],['843','22-0039-04','Capa Frontal do Cabeçote Série 8','Cabeçote/Umbilical','Série 8'],['-','22-0015-05','Parafuso da Capa do Cabeçote Série 8','Cabeçote/Umbilical','Série 8'],['337','22-0012-04','Eletrodo de Carga Série 8','Cabeçote/Umbilical','Série 8'],['1247','22-0003-05','Cam de Alinhamento Série 8','Cabeçote/Umbilical','Série 8'],['1009','20-5022-01','Travas de Alinhamento Série 8','Cabeçote/Umbilical','Série 8'],
+['400','32-0005-01','Bomba de Ar Positivo Série 8','Periféricos e Opcionais','Série 8'],['761','31-5075-01','Kit Ar Limpo Série 8','Periféricos e Opcionais','Série 8'],['827','-','Chicote para Sensor Série 8','Periféricos e Opcionais','Série 8'],['828','-','Chicote para Encoder Série 8','Periféricos e Opcionais','Série 8'],['-','-','Chicote para Alerta Luminoso Série 8','Periféricos e Opcionais','Série 8'],['-','-','Chicote para Intertravamento Série 8','Periféricos e Opcionais','Série 8'],
+['252','-','Sensor Fotoelétrico BR400','Acessórios','Universal'],['998','-','Sensor de Barreira BRP3M-MDT','Acessórios','Universal'],['234','-','Sensor de Fibra Ótica BF3AX','Acessórios','Universal'],['346','-','Sensor Indutivo','Acessórios','Universal'],['1248','-','Encoder 300dpi','Acessórios','Universal'],['315','-','Alerta Luminoso LED com Buzzer','Acessórios','Universal'],['271','-','Alerta Luminoso LED sem Buzzer','Acessórios','Universal'],['316','-','Alerta Luminoso Lâmpada com Buzzer','Acessórios','Universal'],['472','-','Alerta Luminoso Lâmpada sem Buzzer','Acessórios','Universal'],['249','-','Cabo de Alimentação 2P+T Padrão BR','Acessórios','Universal'],['254','-','Pedestal de Aço Inox','Acessórios','Universal'],['489','-','Pisseta Graduada 500ml','Acessórios','Universal'],
+['123','51-0081-01','Tinta Preta, FastDry 81','Consumíveis','BestCode 81'],['63','51-0001-01','Tinta Preta, MEK','Consumíveis','Série 8'],['93','51-0005-01','Tinta Amarela, MEK Baixo Pigmento','Consumíveis','Série 8'],['912','51-0056-01','Tinta Amarela, Acetona Baixo Pigmento','Consumíveis','Série 8'],['913','51-0007-01','Tinta Preta, Flex Plus','Consumíveis','Série 8'],['717','51-0013-01','Tinta Preta, Acetona/Etanol','Consumíveis','Série 8'],['718','51-0026-01','Tinta Preta, Super Flex','Consumíveis','Série 8'],['94','51-0027-01','Tinta Preta, MEK Flex','Consumíveis','Série 8'],['97','51-0032-01','Tinta Preta, Resistente à Álcool','Consumíveis','Série 8'],['964','51-0061-01','Tinta Preta, MEK Plástica','Consumíveis','Série 8'],['175','51-0024-01','Tinta Branca, MEK Opaque','Consumíveis','Série 8'],['1270','51-0006-01','Tinta Branca, Acetona Opaque','Consumíveis','Série 8'],['824','51-0015-01','Tinta Vermelha, Food Grade','Consumíveis','Série 8'],['99','52-0081-01','Diluente, FastDry Black','Consumíveis','BestCode 81'],['120','52-0001-01','Diluente, MEK','Consumíveis','Série 8'],['914','52-0002-01','Diluente, Acetona','Consumíveis','Série 8'],['98','52-0007-01','Diluente, Flex','Consumíveis','Série 8'],['825','52-0015-01','Diluente, Food Grade Red','Consumíveis','Série 8'],['721','52-0026-01','Diluente, Super Flex','Consumíveis','Série 8'],['719','52-0027-01','Diluente, Acetona/Etanol','Consumíveis','Série 8'],['122','52-0032-01','Diluente, Resistente à Álcool','Consumíveis','Série 8'],['948','50-0001-01','Solução de Limpeza, MEK','Consumíveis','Série 8'],['199','-','Solução de Limpeza, Livre de MEK','Consumíveis','Série 8'],['975','50-0026-01','Solução de Limpeza, Super Flex','Consumíveis','Série 8'],['963','K934','Cartucho de Tinta Preta K934 Solvente','Consumíveis','DotJet/Famjet'],['962','K710','Cartucho de Tinta Preta K710 Água','Consumíveis','DotJet/Famjet'],['1226','K710 Bulk','Bulk de Tinta Preta K710 Água','Consumíveis','DotJet/Famjet'],['971','W937','Cartucho de Tinta Branca W937','Consumíveis','DotJet/Famjet'],
+['-','DK001','Controlador','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK53','Placa Port','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK51','Placa CPU (CubieBoard)','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK52','Placa Base','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK54','Display LCD + Touchscreen','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK002','Cabeçote de Impressão','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK008','Cabo PEN (Cabeçote-Controlador)','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK55','Fonte de Alimentação','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK19','Encoder 1200ppr + polia 64mm','Peças Famjet TL300DK','Famjet TL300DK'],['-','DK033','Conector externo para sensor e encoder','Peças Famjet TL300DK','Famjet TL300DK']
+];
+  // Insere só as que ainda não existem (por codigo+descricao)
+  const existing=new Set(DATA.pecas.map(p=>(p.codigo||'')+'|'+p.descricao));
+  const novos=C.filter(r=>!existing.has((r[1]||'')+'|'+r[2])).map(r=>({ref:r[0]==='-'?null:r[0],codigo:r[1]==='-'?null:r[1],descricao:r[2],categoria:r[3],compativel:r[4]});
+  if(!novos.length){toast('✅ Catálogo já está completo no banco.');return}
+  const {error}=await sb.from('pecas').insert(novos);
+  if(error){toast('⚠️ Erro: '+error.message);return}
+  await reloadTable('pecas');toast('✅ '+novos.length+' peças sincronizadas no banco!');
+}
+
+/* ---------- CLIENTES ---------- */
+function renderCli(){popSel('selEquipCliente',DATA.clientes,'id',c=>c.nome);$('panelClienteForm').style.display=(can('create_cliente'))?'':'none';const tb=$('tbClientes');tb.innerHTML=DATA.clientes.length?DATA.clientes.map(c=>{const a=`<button class="btn-info btn-sm" onclick="openClienteHistorico('${c.id}')">📋</button>`+(can('edit_cliente')?` <button class="btn-warning btn-sm" onclick="editCli('${c.id}')">✏️</button>`:'')+(canDelete()?` <button class="btn-danger btn-sm" onclick="delCli('${c.id}')">✕</button>`:'');return`<tr><td>${esc(c.nome)}</td><td><span class="badge ${c.tipo==='Interno'?'badge-interno':'badge-externo'}">${esc(c.tipo)}</span></td><td>${esc(c.telefone||'-')}</td><td>${a}</td></tr>`}).join(''):'<tr><td colspan="4" class="muted empty-state">Nenhum cliente.</td></tr>'}
+function resetFormCliente(){$('formCliente').reset();document.querySelector('#formCliente [name=editId]').value='';$('btnCancelCliente').style.display='none';$('btnSaveCliente').textContent='Salvar';$('clientePanelTitle').textContent='➕ Novo Cliente'}
+function editCli(id){if(!can('edit_cliente')){toast('⛔');return}const c=DATA.clientes.find(x=>x.id===id);if(!c)return;const f=$('formCliente');f.nome.value=c.nome;f.tipo.value=c.tipo;f.telefone.value=c.telefone||'';f.email.value=c.email||'';f.obs.value=c.obs||'';f.editId.value=id;$('clientePanelTitle').textContent='✏️ Editar Cliente';$('btnCancelCliente').style.display='';$('btnSaveCliente').textContent='Atualizar';$('panelClienteForm').style.display=''}
+document.getElementById('formCliente').addEventListener('submit',async function(e){e.preventDefault();const fd=new FormData(this);const eid=fd.get('editId');const payload={nome:fd.get('nome').trim(),tipo:fd.get('tipo'),telefone:fd.get('telefone').trim(),email:fd.get('email').trim(),obs:fd.get('obs').trim()};if(eid){if(!can('edit_cliente')){toast('⛔');return}const {error}=await sb.from('clientes').update(payload).eq('id',eid);if(error){toast('⚠️ '+error.message);return}toast('✅ Atualizado')}else{if(!can('create_cliente')){toast('⛔');return}const {error}=await sb.from('clientes').insert(payload);if(error){toast('⚠️ '+error.message);return}toast('✅ Salvo')}await reloadTable('clientes');resetFormCliente()});
+async function delCli(id){if(!canDelete()){toast('⛔');return}if(!confirm('Excluir cliente?'))return;const {error}=await sb.from('clientes').delete().eq('id',id);if(error){toast('⚠️ '+error.message);return}await reloadTable('clientes');toast('🗑️ Excluído')}
+function openClienteHistorico(cid){const cl=DATA.clientes.find(c=>c.id===cid);if(!cl)return;document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));$('view-cliente-historico').classList.add('active');updateActiveNav('clientes');$('clienteHistTitle').textContent='📋 '+cl.nome;const all=[...DATA.os.filter(o=>o.cliente_id===cid).map(o=>({data:o.data_abertura,titulo:'🔧 '+o.numero,body:esc(o.defeito||'-'),tipo:'os',status:o.status})),...DATA.visitas.filter(v=>v.cliente_id===cid).map(v=>({data:v.criado_em,titulo:'🚗 '+v.numero,body:esc(v.tipo_chamada||'')+' - '+esc(v.falha||'-'),tipo:'v'}))].sort((a,b)=>new Date(b.data)-new Date(a.data));$('clienteHistContent').innerHTML=all.length?'<div class="timeline">'+all.map(it=>`<div class="timeline-item"><div class="timeline-dot${it.tipo==='v'?' visita':''}"></div><div class="timeline-date">${esc(fmtD(it.data))}</div><div class="timeline-title">${it.titulo}</div><div class="timeline-body">${it.body}</div>${it.status?'<div class="timeline-tags">'+badge(it.status)+'</div>':''}</div>`).join('')+'</div>':'<p class="muted empty-state">Sem histórico.</p>'}
+
+/* ---------- EQUIPAMENTOS ---------- */
+function renderEq(){popSel('selEquipCliente',DATA.clientes,'id',c=>c.nome);$('panelEquipForm').style.display=can('create_equip')?'':'none';const tb=$('tbEquips');tb.innerHTML=DATA.equipamentos.length?DATA.equipamentos.map(e=>{const cl=DATA.clientes.find(c=>c.id===e.cliente_id);const a=`<button class="btn-info btn-sm" onclick="openQr('${e.id}')">🔲 QR</button>`+(can('edit_equip')?` <button class="btn-warning btn-sm" onclick="editEq('${e.id}')">✏️</button>`:'')+(canDelete()?` <button class="btn-danger btn-sm" onclick="delEq('${e.id}')">✕</button>`:'');return`<tr><td><strong>${esc(e.serie)}</strong></td><td>${esc(cl?cl.nome:'-')}</td><td>${esc(e.modelo)}</td><td>${esc(e.status)}</td><td class="actions">${a}</td></tr>`}).join(''):'<tr><td colspan="5" class="muted empty-state">Nenhum equipamento.</td></tr>'}
+function resetFormEquip(){$('formEquip').reset();document.querySelector('#formEquip [name=editId]').value='';$('btnCancelEquip').style.display='none';$('btnSaveEquip').textContent='Salvar';$('equipPanelTitle').textContent='➕ Novo Equipamento'}
+function editEq(id){if(!can('edit_equip')){toast('⛔');return}const e=DATA.equipamentos.find(x=>x.id===id);if(!e)return;const f=$('formEquip');f.serie.value=e.serie;f.cliente_id.value=e.cliente_id;f.marca.value=e.marca||'BestCode';f.modelo.value=e.modelo;f.local.value=e.local||'';f.status.value=e.status;f.editId.value=id;$('equipPanelTitle').textContent='✏️ Editar';$('btnCancelEquip').style.display='';$('btnSaveEquip').textContent='Atualizar';$('panelEquipForm').style.display=''}
+document.getElementById('formEquip').addEventListener('submit',async function(e){e.preventDefault();const fd=new FormData(this);const eid=fd.get('editId');const payload={serie:fd.get('serie').trim(),cliente_id:fd.get('cliente_id'),marca:fd.get('marca').trim()||'BestCode',modelo:fd.get('modelo'),local:fd.get('local').trim(),status:fd.get('status')};if(!payload.cliente_id){alert('Selecione cliente.');return}if(eid){if(!can('edit_equip')){toast('⛔');return}const {error}=await sb.from('equipamentos').update(payload).eq('id',eid);if(error){toast('⚠️ '+error.message);return}toast('✅ Atualizado')}else{if(!can('create_equip')){toast('⛔');return}const {error}=await sb.from('equipamentos').insert(payload);if(error){toast('⚠️ '+error.message);return}toast('✅ Salvo')}await reloadTable('equipamentos');resetFormEquip()});
+async function delEq(id){if(!canDelete()){toast('⛔');return}if(!confirm('Excluir equipamento?'))return;const {error}=await sb.from('equipamentos').delete().eq('id',id);if(error){toast('⚠️ '+error.message);return}await reloadTable('equipamentos');toast('🗑️ Excluído')}
+
+/* ---------- PEÇAS (leitura) ---------- */
+function renderPc(){const s=($('searchPecas')?$('searchPecas').value:'').toLowerCase().trim();const f=s?DATA.pecas.filter(p=>(p.codigo||'').toLowerCase().includes(s)||(p.descricao||'').toLowerCase().includes(s)||(p.compativel||'').toLowerCase().includes(s)||(p.ref||'').toLowerCase().includes(s)):DATA.pecas;$('pcCount').textContent=f.length+' peças';$('tbPecas').innerHTML=f.length?f.map(p=>`<tr><td>${p.ref?esc(p.ref):'-'}</td><td><code>${esc(p.codigo||'-')}</code></td><td>${esc(p.descricao)}</td><td><span class="badge badge-wait">${esc(p.categoria||'-')}</span></td><td>${esc(p.compativel||'-')}</td></tr>`).join(''):'<tr><td colspan="5" class="muted empty-state">Vazio. Use "Sincronizar Catálogo".</td></tr>'}
+
+/* ---------- OS ---------- */
+function refreshOsClienteSelect(){$('osCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('')}
+function filterOsEquipByCliente(ci){const es=$('osEquip'),bn=$('btnNewEquip');if(!ci){es.innerHTML='<option value="">Selecione cliente</option>';es.disabled=true;bn.disabled=true;return}const eqs=DATA.equipamentos.filter(e=>e.cliente_id===ci);es.innerHTML='<option value="">Selecione...</option>'+eqs.map(e=>`<option value="${e.id}">${esc(e.serie)} - ${esc(e.modelo)}</option>`).join('');es.disabled=false;bn.disabled=!can('create_equip')}
+document.getElementById('osCliente').addEventListener('change',function(){filterOsEquipByCliente(this.value)});
+function renderOsList(){refreshOsClienteSelect();filterOsEquipByCliente('');$('panelOsForm').style.display=can('create_os')?'':'none';$('tbOs').innerHTML=DATA.os.length?DATA.os.map(o=>{const eq=DATA.equipamentos.find(e=>e.id===o.equipamento_id);const cl=DATA.clientes.find(c=>c.id===o.cliente_id);return`<tr class="clickable-row" onclick="openOs('${o.id}')"><td><strong>${esc(o.numero)}</strong></td><td>${esc(fmtD(o.data_abertura))}</td><td>${esc(cl?cl.nome:'-')}</td><td>${esc(eq?eq.serie:'-')}</td><td>${esc(o.defeito||'-')}</td><td>${badge(o.status)}</td></tr>`}).join(''):'<tr><td colspan="6" class="muted empty-state">Nenhuma OS.</td></tr>'}
+document.getElementById('formOS').addEventListener('submit',async function(e){e.preventDefault();const fd=new FormData(this);const ei=fd.get('equip_id')||$('osEquip').value;const ci=$('osCliente').value;if(!ci||!ei){alert('Selecione cliente e equipamento.');return}if(!can('create_os')){toast('⛔');return}const ano=new Date().getFullYear();const n=String(DATA.os.filter(o=>o.numero&&o.numero.startsWith('OS-'+ano+'-')).length+1).padStart(4,'0');const payload={numero:'OS-'+ano+'-'+n,cliente_id:ci,equipamento_id:ei,tecnico:fd.get('tecnico').trim()||ME.nome,tipo:fd.get('tipo'),prioridade:fd.get('prioridade'),status:'Aberta',defeito:fd.get('defeito').trim()};const {error}=await sb.from('ordens_servico').insert(payload);if(error){toast('⚠️ '+error.message);return}await reloadTable('ordens_servico','os');this.reset();filterOsEquipByCliente('');toast('✅ '+payload.numero)});
+
+let curOs=null;
+async function openOs(id){const os=DATA.os.find(o=>o.id===id);if(!os)return;curOs=os;document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));$('view-os-detail').classList.add('active');updateActiveNav('os');$('detailOsNumero').textContent=os.numero;$('detailOsBadge').outerHTML=badge(os.status).replace('class="badge','id="detailOsBadge" class="badge');const eq=DATA.equipamentos.find(e=>e.id===os.equipamento_id);const cl=DATA.clientes.find(c=>c.id===os.cliente_id);const ce=can('edit_os');$('detailOsForm').innerHTML=`<div><label>Cliente</label><input value="${esc(cl?cl.nome:'-')}" disabled></div><div><label>Equipamento</label><input value="${esc(eq?eq.serie:'-')}" disabled></div><div><label>Técnico</label>${ce?`<input value="${esc(os.tecnico||'')}" onchange="updOs('tecnico',this.value)">`:`<input value="${esc(os.tecnico||'-')}" disabled>`}</div><div><label>Status</label>${ce?`<select onchange="updOs('status',this.value)">${['Aberta','Em análise','Aguardando peça','Em manutenção','Em teste','Concluída','Cancelada'].map(s=>`<option${os.status===s?' selected':''}>${s}</option>`).join('')}</select>`:`<input value="${esc(os.status)}" disabled>`}</div><div style="grid-column:1/-1"><label>Defeito</label><textarea disabled>${esc(os.defeito||'')}</textarea></div>`;$('btnDeleteOs').style.display=canDelete()?'':'none';$('osDetailTabs').innerHTML='<button class="tab-btn active" onclick="switchTab(\'laudo\',this)">📝 Laudo</button><button class="tab-btn" onclick="switchTab(\'pecas-uso\',this)">🔩 Usadas</button><button class="tab-btn" onclick="switchTab(\'fotos\',this)">📸 Fotos</button><button class="tab-btn" onclick="switchTab(\'historico\',this)">📜 Hist.</button>';const lf=$('formLaudo'),cf=can('fill_laudo');for(const el of lf.elements){if(el.name)el.disabled=!cf}$('laudoSaveBtn').style.display=cf?'':'none';$('fotoModeInfo').textContent=CFG.imgbbKey?'☁️ Fotos enviadas para a nuvem (ImgBB).':'📱 Sem ImgBB: fotos ficam neste aparelho.';const l=os.laudo||(await loadLaudo(os.id));['constatado','causa','testes','servicos'].forEach(k=>lf[k].value=(l&&l[k])||'');lf.resultado.value=(l&&l.resultado)||'';renderOsPecas();await renderPhotos();await renderHistorico(os.equipamento_id)}
+async function loadLaudo(osId){const {data}=await sb.from('laudos').select('*').eq('os_id',osId).limit(1).single();return data}
+async function updOs(f,v){if(!can('edit_os')){toast('⛔');return}const {error}=await sb.from('ordens_servico').update({[f]:v}).eq('id',curOs.id);if(error){toast('⚠️ '+error.message);return}curOs[f]=v;if(f==='status')$('detailOsBadge').outerHTML=badge(v).replace('class="badge','id="detailOsBadge" class="badge')}
+document.getElementById('formLaudo').addEventListener('submit',async function(e){e.preventDefault();if(!can('fill_laudo')){toast('⛔');return}const fd=new FormData(this);const payload={os_id:curOs.id,defeito_constatado:fd.get('constatado').trim(),causa:fd.get('causa').trim(),testes:fd.get('testes').trim(),servicos:fd.get('servicos').trim(),resultado:fd.get('resultado')};const {data:exist}=await sb.from('laudos').select('id').eq('os_id',curOs.id).limit(1).single();const {error}=exist?await sb.from('laudos').update(payload).eq('id',exist.id):await sb.from('laudos').insert(payload);if(error){toast('⚠️ '+error.message);return}toast('✅ Laudo salvo!')});
+async function renderOsPecas(){if(!curOs)return;const {data}=await sb.from('os_pecas').select('*').eq('os_id',curOs.id).eq('tipo','usada');$('formAddPecaUso').style.display=can('add_peca_os')?'':'none';$('tbPecasUso').innerHTML=(data&&data.length)?data.map((pu,i)=>{const p=DATA.pecas.find(x=>x.id===pu.peca_id);return`<tr><td>${esc(p?p.codigo+' - '+p.descricao:'?')}</td><td>${pu.qtd}</td><td>${can('remove_peca_os')?`<button class="btn-danger btn-sm" onclick="delPU('${pu.id}')">✕</button>`:''}</td></tr>`}).join(''):'<tr><td colspan="3" class="muted empty-state">Nenhuma.</td></tr>'}
+document.getElementById('formAddPecaUso').addEventListener('submit',async function(e){e.preventDefault();if(!can('add_peca_os')){toast('⛔');return}const md=$('matchUso');const pid=md.getAttribute('data-peca-id');if(!pid){alert('Selecione peça.');return}const {error}=await sb.from('os_pecas').insert({os_id:curOs.id,peca_id:pid,tipo:'usada',qtd:Number(document.querySelector('#formAddPecaUso [name=qtd]').value)||1});if(error){toast('⚠️ '+error.message);return}this.reset();md.classList.remove('visible');md.removeAttribute('data-peca-id');await renderOsPecas();toast('✅')});
+async function delPU(id){if(!can('remove_peca_os')){toast('⛔');return}if(!confirm('Remover?'))return;await sb.from('os_pecas').delete().eq('id',id);await renderOsPecas()}
+async function excluirOsAtual(){if(!canDelete()){toast('⛔');return}if(!confirm('Excluir OS?'))return;await sb.from('ordens_servico').delete().eq('id',curOs.id);await reloadTable('ordens_servico','os');navigate('os');toast('🗑️')}
+
+/* ---------- FOTOS ---------- */
+async function renderPhotos(){if(!curOs)return;const {data}=await sb.from('fotos').select('*').eq('os_id',curOs.id).order('criado_em');const g=$('photoGrid'),ul=g.querySelector('.photo-upload');g.querySelectorAll('.photo-card').forEach(c=>c.remove());(data||[]).forEach(f=>{const d=document.createElement('div');d.className='photo-card';const cloud=f.url.indexOf('http')===0;d.innerHTML=`<img src="${f.url}" onclick="openLightbox('${f.url}')">${cloud?'<span class="cloud-tag">☁️</span>':''}${can('remove_foto')?`<button class="remove-photo" onclick="delFoto('${f.id}')">&times;</button>`:''}`;g.insertBefore(d,ul)})}
+function addPhotos(input){if(!can('upload_foto')){toast('⛔');return}const files=input.files;Array.from(files).forEach(f=>{if(f.size>2000000){toast('⚠️ '+f.name+' >2MB');return}const r=new FileReader();r.onload=function(ev){const img=new Image();img.onload=async function(){const c=document.createElement('canvas');let w=img.width,h=img.height,m=1200;if(w>m||h>m){if(w>h){h=h*(m/w);w=m}else{w=w*(m/h);h=m}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);const b64=c.toDataURL('image/jpeg',0.7);let url=b64;if(CFG.imgbbKey){toast('📤 Enviando...');const u=await new Promise(res=>uploadToImgBB(b64,res));if(u)url=u;else toast('⚠️ Falha ImgBB — salva local')}const {error}=await sb.from('fotos').insert({os_id:curOs.id,url});if(error){toast('⚠️ '+error.message);return}await renderPhotos();toast('✅ Foto salva')};img.src=ev.target.result};r.readAsDataURL(f)});input.value=''}
+async function delFoto(id){if(!can('remove_foto')){toast('⛔');return}if(!confirm('Remover foto?'))return;await sb.from('fotos').delete().eq('id',id);await renderPhotos()}
+function openLightbox(s){$('lightboxImg').src=s;$('lightbox').classList.add('active')}
+function closeLightbox(){$('lightbox').classList.remove('active')}
+async function renderHistorico(eid){const all=[...DATA.os.filter(o=>o.equipamento_id===eid).map(o=>({data:o.data_abertura,titulo:'🔧 '+o.numero,body:esc(o.defeito||'-'),tipo:'os',status:o.status})),...DATA.visitas.filter(v=>v.equipamento_id===eid).map(v=>({data:v.criado_em,titulo:'🚗 '+v.numero,body:esc(v.tipo_chamada||'')+' - '+esc(v.falha||'-'),tipo:'v'}))].sort((a,b)=>new Date(b.data)-new Date(a.data));$('historicoTimeline').innerHTML=all.length?'<div class="timeline">'+all.map(it=>`<div class="timeline-item"><div class="timeline-dot${it.tipo==='v'?' visita':''}"></div><div class="timeline-date">${esc(fmtD(it.data))}</div><div class="timeline-title">${it.titulo}</div><div class="timeline-body">${it.body}</div>${it.status?'<div class="timeline-tags">'+badge(it.status)+'</div>':''}</div>`).join('')+'</div>':'<p class="muted empty-state">Sem histórico.</p>'}
+
+/* ---------- VISITAS ---------- */
+function renderVisitas(){$('tbVisitas').innerHTML=DATA.visitas.length?DATA.visitas.map(v=>{const cl=DATA.clientes.find(c=>c.id===v.cliente_id);const eq=DATA.equipamentos.find(e=>e.id===v.equipamento_id);const a=`<button class="btn-info btn-sm" onclick="openVisitaForm('${v.id}')">✏️</button>`+(canDelete()?` <button class="btn-danger btn-sm" onclick="delVisita('${v.id}')">✕</button>`:'');return`<tr><td><strong>${esc(v.numero)}</strong></td><td>${esc(fmtDS(v.data))}</td><td>${esc(cl?cl.nome:'-')}</td><td>${esc(eq?eq.serie:'-')}</td><td>${esc(v.tecnico||'-')}</td><td><span class="badge badge-visita">${esc(v.tipo_chamada||'-')}</span></td><td class="actions">${a}</td></tr>`}).join(''):'<tr><td colspan="7" class="muted empty-state">Nenhuma visita.</td></tr>'}
+let curEditVisita=null;
+function openVisitaForm(id){if(!can('create_visita')&&!can('edit_visita')){toast('⛔');return}curEditVisita=id||null;document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));$('view-visita-form').classList.add('active');popSel('vCliente',DATA.clientes,'id',c=>c.nome);initSig();clearSig();if(id){const v=DATA.visitas.find(x=>x.id===id);if(!v)return;$('visitaFormTitle').textContent='✏️ Editar Visita';$('visitaNumero').textContent=v.numero;$('vCliente').value=v.cliente_id;vClienteChanged();setTimeout(()=>{$('vEquip').value=v.equipamento_id;vEquipChanged()},50);$('vTecnico').value=v.tecnico||'';$('vContrManut').value=v.contr_manut||'N';$('vFalha').value=v.falha||'';$('vServico').value=v.servico||'';$('vLaudo').value=v.laudo||'';$('vData').value=v.data||'';$('vSaidaTesla').value=v.saida_tesla||'';$('vChegadaCliente').value=v.chegada_cliente||'';$('vSaidaCliente').value=v.saida_cliente||'';$('vChegadaTesla').value=v.chegada_tesla||'';$('vKm').value=v.km||'';$('vServicoHN').value=v.servico_hn||'';$('vServicoHE').value=v.servico_he||0;$('vDeslocHN').value=v.desloc_hn||'';$('vDeslocHE').value=v.desloc_he||0;$('vObs').value=v.obs||'';$('vNomeExtenso').value=v.nome_extenso||'';$('vCargo').value=v.cargo||'';const radios=document.querySelectorAll('input[name=vTipo]');radios.forEach(r=>r.checked=(r.value===v.tipo_chamada));renderPecasVisita()}else{$('visitaFormTitle').textContent='🚗 Nova Visita Técnica';$('visitaNumero').textContent='';$('vCliente').value='';$('vEquip').innerHTML='<option value="">Selecione cliente</option>';$('vEquip').disabled=true;$('vSerie').value='';$('vTecnico').value=ME.nome;$('vContrManut').value='N';$('vFalha').value='';$('vServico').value='';$('vLaudo').value='';$('vData').value=new Date().toISOString().slice(0,10);$('vSaidaTesla').value='';$('vChegadaCliente').value='';$('vSaidaCliente').value='';$('vChegadaTesla').value='';$('vKm').value='';$('vServicoHN').value='';$('vServicoHE').value=0;$('vDeslocHN').value='';$('vDeslocHE').value=0;$('vObs').value='';$('vNomeExtenso').value='';$('vCargo').value='';document.querySelectorAll('input[name=vTipo]').forEach(r=>r.checked=(r.value==='Manutenção'));S._tmpPecas=[];renderPecasVisita()}}
+function vClienteChanged(){const ci=$('vCliente').value;const es=$('vEquip');if(!ci){es.innerHTML='<option value="">Selecione cliente</option>';es.disabled=true;return}const eqs=DATA.equipamentos.filter(e=>e.cliente_id===ci);es.innerHTML='<option value="">Selecione...</option>'+eqs.map(e=>`<option value="${e.id}">${esc(e.serie)} - ${esc(e.modelo)}</option>`).join('');es.disabled=false;const c=DATA.clientes.find(x=>x.id===ci);if(c){$('vContato').value=c.nome||'';$('vFone').value=c.telefone||'';$('vEndereco').value=c.endereco||'';$('vCidade').value=c.cidade||'';$('vEstado').value=c.estado||'';$('vCep').value=c.cep||'';$('vBairro').value=c.bairro||''}}
+function vEquipChanged(){const ei=$('vEquip').value;const e=DATA.equipamentos.find(x=>x.id===ei);$('vSerie').value=e?e.serie:''}
+function calcHoras(){const t2=t=>{if(!t)return null;const p=t.split(':');return(+p[0])*60+(+p[1])};const st=t2($('vSaidaTesla').value),cc=t2($('vChegadaCliente').value),sc=t2($('vSaidaCliente').value),ct=t2($('vChegadaTesla').value);const serv=(sc!=null&&cc!=null&&sc>=cc)?(sc-cc):0;let desc=0;if(st!=null&&cc!=null&&cc>=st)desc+=cc-st;if(sc!=null&&ct!=null&&ct>=sc)desc+=ct-sc;$('vServicoHN').value=(serv/60).toFixed(1);$('vDeslocHN').value=(desc/60).toFixed(1)}
+function addPecaVisita(){const md=$('vMatchPeca');const pid=md.getAttribute('data-peca-id');if(!pid){alert('Selecione peça.');return}if(!S._tmpPecas)S._tmpPecas=[];S._tmpPecas.push({peca_id:pid,qtd:Number($('vPecaQtd').value)||1});renderPecasVisita();$('vPecaSearch').value='';md.classList.remove('visible');md.removeAttribute('data-peca-id')}
+function renderPecasVisita(){const pecas=S._tmpPecas||[];$('tbPecasVisita').innerHTML=pecas.length?pecas.map((pu,i)=>{const p=DATA.pecas.find(x=>x.id===pu.peca_id);return`<tr><td>${pu.qtd}</td><td>${p?esc(p.ref||'-'):'-'}</td><td><code>${p?esc(p.codigo||'-'):'?'}</code></td><td>${p?esc(p.descricao):'?'}</td><td><button class="btn-danger btn-sm" onclick="delPecaVisita(${i})">✕</button></td></tr>`}).join(''):'<tr><td colspan="5" class="muted empty-state">Nenhuma peça.</td></tr>'}
+function delPecaVisita(i){S._tmpPecas.splice(i,1);renderPecasVisita()}
+async function saveVisita(){const ci=$('vCliente').value,ei=$('vEquip').value;if(!ci||!ei){alert('Selecione cliente e equipamento.');return}if(!$('vFalha').value.trim()){alert('Informe falha/motivo.');return}if(!can('create_visita')&&!can('edit_visita')){toast('⛔');return}const tipo=(document.querySelector('input[name=vTipo]:checked')||{}).value||'Manutenção';const sig=sigHas?sigCanvas.toDataURL('image/png'):null;const payload={cliente_id:ci,equipamento_id:ei,tecnico:$('vTecnico').value||ME.nome,tipo_chamada:tipo,contr_manut:$('vContrManut').value,falha:$('vFalha').value,servico:$('vServico').value,laudo:$('vLaudo').value,data:$('vData').value||null,saida_tesla:$('vSaidaTesla').value||null,chegada_cliente:$('vChegadaCliente').value||null,saida_cliente:$('vSaidaCliente').value||null,chegada_tesla:$('vChegadaTesla').value||null,km:$('vKm').value||null,servico_hn:$('vServicoHN').value||null,servico_he:$('vServicoHE').value||null,desloc_hn:$('vDeslocHN').value||null,desloc_he:$('vDeslocHE').value||null,obs:$('vObs').value,nome_extenso:$('vNomeExtenso').value,cargo:$('vCargo').value,assinatura_url:sig};
+if(curEditVisita){const {error}=await sb.from('visitas').update(payload).eq('id',curEditVisita);if(error){toast('⚠️ '+error.message);return}toast('✅ Atualizada')}else{const ano=new Date().getFullYear();const n=String(DATA.visitas.filter(v=>v.numero&&v.numero.startsWith('VIS-'+ano+'-')).length+1).padStart(4,'0');payload.numero='VIS-'+ano+'-'+n;const {data:ins,error}=await sb.from('visitas').insert(payload).select().single();if(error){toast('⚠️ '+error.message);return}if(S._tmpPecas&&S._tmpPecas.length&&ins){const rows=S._tmpPecas.map(pu=>({visita_id:ins.id,peca_id:pu.peca_id,qtd:pu.qtd}));await sb.from('visita_pecas').insert(rows)}toast('✅ '+payload.numero)}
+await reloadTable('visitas');navigate('visitas')}
+async function delVisita(id){if(!canDelete()){toast('⛔');return}if(!confirm('Excluir visita?'))return;await sb.from('visitas').delete().eq('id',id);await reloadTable('visitas');toast('🗑️')}
+
+/* ---------- ASSINATURA ---------- */
+let sigCanvas=null,sigCtx=null,sigDrawing=false,sigHas=false;
+function initSig(){sigCanvas=$('vAssinatura');if(!sigCanvas)return;sigCtx=sigCanvas.getContext('2d');sigCanvas.width=sigCanvas.offsetWidth||500;sigCanvas.height=150;sigCtx.strokeStyle='#000';sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.lineJoin='round';const pos=e=>{const r=sigCanvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}};sigCanvas.onmousedown=e=>{e.preventDefault();sigDrawing=true;const p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);sigHas=true};sigCanvas.onmousemove=e=>{if(!sigDrawing)return;e.preventDefault();const p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke()};window.onmouseup=()=>sigDrawing=false;sigCanvas.ontouchstart=e=>{e.preventDefault();sigDrawing=true;const p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);sigHas=true};sigCanvas.ontouchmove=e=>{if(!sigDrawing)return;e.preventDefault();const p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke()};sigCanvas.ontouchend=()=>sigDrawing=false}
+function clearSig(){if(!sigCtx)return;sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);sigHas=false}
+
+/* ---------- QR ---------- */
+let curQrEquip=null;
+function qrUrl(d){return'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(d)}
+function openQr(eid){const e=DATA.equipamentos.find(x=>x.id===eid);if(!e)return;curQrEquip=e;const cl=DATA.clientes.find(c=>c.id===e.cliente_id);const d='CMMS|'+e.serie+'|'+e.modelo;$('qrContent').innerHTML=`<img src="${qrUrl(d)}" alt="QR"><div class="mt-1"><strong>${esc(e.serie)}</strong><br>${esc(e.modelo)}<br><span class="muted">${esc(cl?cl.nome:'')}</span></div><p class="muted" style="font-size:.75rem">⚠️ Geração requer internet.</p>`;$('modalQr').style.display='flex'}
+function printQrLabel(){if(!curQrEquip)return;const e=curQrEquip;const cl=DATA.clientes.find(c=>c.id===e.cliente_id);const w=window.open('','_blank','width=420,height=520');if(!w){alert('Permita popups.');return}w.document.write(`<html><head><title>Etiqueta</title></head><body style="font-family:Arial;text-align:center;padding:20px"><img src="${qrUrl('CMMS|'+e.serie+'|'+e.modelo)}" style="width:180px;height:180px"><br><strong style="font-size:16px">${esc(e.serie)}</strong><br>${esc(e.modelo)}<br><span style="font-size:12px">${esc(cl?cl.nome:'')}</span><script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script></body></html>`);w.document.close()}
+function closeModal(id){$(id).style.display='none'}
+function openModal(id){$(id).style.display='flex'}
+document.getElementById('formQuickCliente').addEventListener('submit',async function(e){e.preventDefault();const fd=new FormData(this);const {data,error}=await sb.from('clientes').insert({nome:fd.get('nome').trim(),tipo:fd.get('tipo'),telefone:fd.get('telefone').trim()}).select().single();if(error){toast('⚠️ '+error.message);return}await reloadTable('clientes');$('osCliente').value=data.id;filterOsEquipByCliente(data.id);closeModal('modalCliente');toast('✅ Cliente criado')});
+document.getElementById('formQuickEquip').addEventListener('submit',async function(e){e.preventDefault();const fd=new FormData(this);const ci=fd.get('cliente_id');const se=fd.get('serie').trim();if(!ci||!se)return;const {data,error}=await sb.from('equipamentos').insert({serie:se,cliente_id:ci,marca:'BestCode',modelo:fd.get('modelo'),status:'Operante'}).select().single();if(error){toast('⚠️ '+error.message);return}await reloadTable('equipamentos');$('osEquip').value=data.id;closeModal('modalEquip');toast('✅ Equipamento criado')});
+
+/* ---------- RELATÓRIOS ---------- */
+function applyFilters(){const st=$('fltStatus').value,tc=$('fltTecnico').value,md=$('fltModelo').value,ci=$('fltCliente').value,di=$('fltDataIni').value,df=$('fltDataFim').value;let f=DATA.os.filter(o=>{if(st&&o.status!==st)return false;if(tc&&o.tecnico!==tc)return false;if(ci&&o.cliente_id!==ci)return false;if(md){const eq=DATA.equipamentos.find(e=>e.id===o.equipamento_id);if(!eq||eq.modelo!==md)return false}if(di&&new Date(o.data_abertura)<new Date(di))return false;if(df){const fim=new Date(df);fim.setDate(fim.getDate()+1);if(new Date(o.data_abertura)>=fim)return false}return true});const ab=f.filter(o=>!['Concluída','Cancelada'].includes(o.status)).length,co=f.filter(o=>o.status==='Concluída').length;$('reportSummary').innerHTML=`<div class="report-stat"><div class="val">${f.length}</div><div class="lbl">Total</div></div><div class="report-stat"><div class="val">${ab}</div><div class="lbl">Abertas</div></div><div class="report-stat"><div class="val">${co}</div><div class="lbl">Concluídas</div></div>`;$('tbReport').innerHTML=f.length?f.map(o=>{const eq=DATA.equipamentos.find(e=>e.id===o.equipamento_id);const cl=DATA.clientes.find(c=>c.id===o.cliente_id);return`<tr class="clickable-row" onclick="openOs('${o.id}')"><td><strong>${esc(o.numero)}</strong></td><td>${esc(fmtDS(o.data_abertura))}</td><td>${esc(cl?cl.nome:'-')}</td><td>${esc(eq?eq.serie:'-')}</td><td>${esc(o.defeito||'-')}</td><td>${esc(o.tecnico||'-')}</td><td>${badge(o.status)}</td></tr>`}).join(''):'<tr><td colspan="7" class="muted empty-state">Nenhuma.</td></tr>'}
+function clearFilters(){['fltStatus','fltTecnico','fltModelo','fltCliente','fltDataIni','fltDataFim'].forEach(id=>$(id).value='');applyFilters()}
+function renderDash(){const os=DATA.os;const cards=[{l:'Clientes',v:DATA.clientes.length},{l:'Equip.',v:DATA.equipamentos.length},{l:'OS Abertas',v:os.filter(o=>!['Concluída','Cancelada'].includes(o.status)).length},{l:'Visitas',v:DATA.visitas.length},{l:'Peças',v:DATA.pecas.length},{l:'Concluídas',v:os.filter(o=>o.status==='Concluída').length}];$('dashCards').innerHTML=cards.map(c=>`<div class="card"><div>${esc(c.l)}</div><strong>${c.v}</strong></div>`).join('');const ult=os.slice(0,5);$('dashOsList').innerHTML=ult.length?'<div class="table-container"><table><thead><tr><th>OS</th><th>Data</th><th>Cliente</th><th>Equip.</th><th>Status</th></tr></thead><tbody>'+ult.map(o=>{const eq=DATA.equipamentos.find(e=>e.id===o.equipamento_id);const cl=DATA.clientes.find(c=>c.id===o.cliente_id);return`<tr class="clickable-row" onclick="openOs('${o.id}')"><td>${esc(o.numero)}</td><td>${esc(fmtD(o.data_abertura))}</td><td>${esc(cl?cl.nome:'-')}</td><td>${esc(eq?eq.serie:'-')}</td><td>${badge(o.status)}</td></tr>`}).join('')+'</tbody></table></div>':'<p class="muted empty-state">Nenhuma OS.</p>'}
+function renderBackup(){const online=!!sb;$('serverStatus').innerHTML=`<span class="server-dot ${online?'online':'offline'}"></span><span>Supabase: <strong>${online?'Conectado ☁️':'Desconectado'}</strong></span> &nbsp;|&nbsp; <span class="server-dot ${CFG.imgbbKey?'online':'offline'}"></span><span>ImgBB: <strong>${CFG.imgbbKey?'Configurado':'Não configurado'}</strong></span>`;$('connDetail').innerHTML=`<p class="muted" style="font-size:.85rem">Usuário: <b>${esc(ME?ME.nome:'-')}</b> (${esc(ME?ME.role:'-')}) • ${DATA.clientes.length} clientes • ${DATA.equipamentos.length} equipamentos • ${DATA.os.length} OS • ${DATA.visitas.length} visitas • ${DATA.pecas.length} peças no catálogo.</p>`}
+
+/* ---------- BOOT ---------- */
+(async function boot(){
+  loadCfgLocal();                 // 1) localStorage
+  await tryLoadConfigFile();      // 2) cmms-config.json da raiz (sobrescreve se existir)
+  applyVisualConfig();
+  if(CFG.supabaseUrl && CFG.supabaseKey){
+    initSupabaseClient();
+    // tenta sessão existente
+    if(sb){
+      try{
+        const {data:{session}}=await sb.auth.getSession();
+        if(session){await startApp();return}
+      }catch(e){}
+    }
+    $('loginStatus').textContent='☁️ Supabase configurado. Faça login.';
+  }else{
+    $('loginStatus').textContent='⚠️ Supabase não configurado. Cole URL+Key em ⚙️ Configurações ou crie cmms-config.json na pasta.';
+  }
+})();
+</script>
+</body>
+</html>

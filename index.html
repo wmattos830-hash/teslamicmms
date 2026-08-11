@@ -16,6 +16,10 @@
 .lcard input{margin-bottom:.75rem;width:100%;padding:.625rem;border:1px solid var(--bd);border-radius:6px;font:inherit}
 .lcard button{width:100%;margin-bottom:.5rem}
 .lerr{color:#dc2626;font-size:.85rem;display:none;background:#fef2f2;padding:.75rem;border-radius:6px;text-align:left}
+.role-badge{display:inline-block;padding:.25rem .75rem;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:.5rem}
+.role-admin{background:#ede9fe;color:#6d28d9}
+.role-tecnico{background:#dbeafe;color:#1e40af}
+.role-visualizador{background:#f3f4f6;color:#374151}
 .ctoggle{background:none;border:2px solid var(--p);color:var(--p);cursor:pointer;font-size:.9rem;padding:.5rem 1rem;border-radius:6px;font-weight:600;width:100%}
 #configPanel{display:none;text-align:left;margin-top:1rem;padding:1rem;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
 #configPanel.active{display:block}
@@ -29,6 +33,9 @@
 .sitem{display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:8px;cursor:pointer;font-size:.875rem;color:#d1d5db;border:none;background:none;width:100%;text-align:left}
 .sitem.active{background:var(--p);color:#fff}
 .sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-user{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.sidebar-user strong{font-size:.85rem;color:#fff;display:block}
+.sidebar-user span{font-size:.7rem;color:#9ca3af;display:block}
 .main-content{margin-left:var(--sw);padding:1.5rem;max-width:1200px}
 .mheader{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#111827;color:#fff;z-index:200;padding:0 1rem;align-items:center;justify-content:space-between}
 .mheader img{max-height:32px;border-radius:4px}
@@ -113,14 +120,14 @@ th{background:#f9fafb;color:var(--mu)}
 
 <div id="appShell" style="display:none">
 <div class="mheader"><img id="mobileLogo" style="display:none" alt=""><span id="mobileAppName">CMMS</span><button style="background:none;border:none;color:#fff;font-size:1.5rem" onclick="toggleDrawer()">☰</button></div>
-<aside class="sidebar"><div class="sidebar-header"><img id="sidebarLogo" style="display:none" alt=""><h1 id="sidebarAppName">CMMS</h1></div><nav class="sidebar-nav" id="sidebarNav"></nav><div class="sidebar-footer"><button class="bs" style="width:100%" onclick="doLogout()">Sair</button></div></aside>
+<aside class="sidebar"><div class="sidebar-header"><img id="sidebarLogo" style="display:none" alt=""><h1 id="sidebarAppName">CMMS</h1></div><nav class="sidebar-nav" id="sidebarNav"></nav><div class="sidebar-footer"><div class="sidebar-user"><div><strong id="sidebarUserName">-</strong><span id="sidebarUserRole">-</span></div><button class="bs bsm" style="width:auto" onclick="doLogout()">Sair</button></div></div></aside>
 
 <div class="main-content">
 <datalist id="dlPecas"></datalist>
 
 <section id="view-dashboard" class="view"><div class="grid" id="dashCards"></div><div class="panel"><h2>📋 Últimas OS</h2><div id="dashOsList"></div></div></section>
 
-<section id="view-visitas" class="view"><div class="panel"><div class="fb"><h2 style="margin:0;border:0;padding:0">🚗 Visitas Técnicas</h2><button class="bp" onclick="openVisitaForm()">➕ Nova Visita</button></div><div class="twrap"><table><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Técnico</th><th>Tipo</th><th>Ações</th></tr></thead><tbody id="tbVisitas"></tbody></table></div></div></section>
+<section id="view-visitas" class="view"><div class="panel"><div class="fb"><h2 style="margin:0;border:0;padding:0">🚗 Visitas Técnicas</h2><button class="bp" id="btnNovaVisita" onclick="openVisitaForm()">➕ Nova Visita</button></div><div class="twrap"><table><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Técnico</th><th>Tipo</th><th>Ações</th></tr></thead><tbody id="tbVisitas"></tbody></table></div></div></section>
 
 <section id="view-visita-form" class="view"><div class="fb no-print" style="margin-bottom:1rem"><button class="bs" onclick="navigate('visitas')">← Voltar</button><button class="bp" onclick="saveVisita()">💾 Salvar</button></div><div class="panel"><div class="fb"><h2 id="visitaFormTitle" style="margin:0;border:0;padding:0">🚗 Nova Visita</h2><span id="visitaNumero" class="badge"></span></div>
 <div class="stitle">Cliente / Chamado</div>
@@ -141,17 +148,19 @@ th{background:#f9fafb;color:var(--mu)}
 
 <section id="view-reports" class="view"><div class="panel"><h2>📊 Relatórios</h2><div class="fgrid" style="margin-bottom:1rem"><div><label>Status</label><select id="fltStatus"><option value="">Todos</option><option>Aberta</option><option>Em análise</option><option>Aguardando peça</option><option>Em manutenção</option><option>Em teste</option><option>Concluída</option><option>Cancelada</option></select></div><div><label>Técnico</label><select id="fltTecnico"><option value="">Todos</option></select></div><div><label>Cliente</label><select id="fltCliente"><option value="">Todos</option></select></div><div style="align-self:end"><button class="bp bsm" onclick="applyFilters()">🔍 Filtrar</button> <button class="bs bsm" onclick="clearFilters()">Limpar</button></div></div><div class="twrap"><table><thead><tr><th>OS</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Defeito</th><th>Status</th></tr></thead><tbody id="tbReport"></tbody></table></div></div></section>
 
-<section id="view-clientes" class="view"><div class="panel"><h2 id="clientePanelTitle">➕ Novo Cliente</h2><form id="formCliente" class="fgrid"><input type="hidden" name="editId"><div><label>Nome *</label><input name="nome" required></div><div><label>Tipo</label><select name="tipo"><option>Externo</option><option>Interno</option></select></div><div><label>Telefone</label><input name="telefone"></div><div><label>E-mail</label><input name="email"></div><div><label>Obs</label><input name="obs"></div><div style="display:flex;gap:.5rem;align-self:end"><button type="submit" class="bp">Salvar</button><button type="button" class="bs" onclick="resetFormCli()" style="display:none" id="btnCancelCli">Cancelar</button></div></form></div><div class="panel"><h2>Clientes</h2><div class="twrap"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Contato</th><th>Ações</th></tr></thead><tbody id="tbClientes"></tbody></table></div></div></section>
+<section id="view-clientes" class="view"><div class="panel" id="panelClienteForm"><h2 id="clientePanelTitle">➕ Novo Cliente</h2><form id="formCliente" class="fgrid"><input type="hidden" name="editId"><div><label>Nome *</label><input name="nome" required></div><div><label>Tipo</label><select name="tipo"><option>Externo</option><option>Interno</option></select></div><div><label>Telefone</label><input name="telefone"></div><div><label>E-mail</label><input name="email"></div><div><label>Obs</label><input name="obs"></div><div style="display:flex;gap:.5rem;align-self:end"><button type="submit" class="bp">Salvar</button><button type="button" class="bs" onclick="resetFormCli()" style="display:none" id="btnCancelCli">Cancelar</button></div></form></div><div class="panel"><h2>Clientes</h2><div class="twrap"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Contato</th><th>Ações</th></tr></thead><tbody id="tbClientes"></tbody></table></div></div></section>
 
 <section id="view-cliente-historico" class="view"><div class="fb no-print" style="margin-bottom:1rem"><button class="bs" onclick="navigate('clientes')">← Voltar</button></div><div class="panel"><h2 id="clienteHistTitle">📋 Histórico</h2><div id="clienteHistContent"></div></div></section>
 
-<section id="view-equipamentos" class="view"><div class="panel"><h2 id="equipPanelTitle">➕ Novo Equipamento</h2><form id="formEquip" class="fgrid"><input type="hidden" name="editId"><div><label>Nº Série *</label><input name="serie" required placeholder="NS_BC86-0001"></div><div><label>Cliente *</label><select name="cliente_id" id="selEquipCliente" required></select></div><div><label>Marca</label><input name="marca" value="BestCode"></div><div><label>Modelo</label><select name="modelo"><option>BestCode 81</option><option>BestCode 82</option><option>BestCode 86</option><option>BestCode 88</option><option>Quantum</option><option>Famjet TL300DK</option><option>DotJet DJ1</option><option>Outro</option></select></div><div><label>Local</label><input name="local"></div><div><label>Status</label><select name="status"><option>Operante</option><option>Parado</option><option>Em manutenção</option><option>Aguardando peça</option><option>Em teste</option><option>Baixado</option></select></div><div style="display:flex;gap:.5rem;align-self:end"><button type="submit" class="bp">Salvar</button><button type="button" class="bs" onclick="resetFormEq()" style="display:none" id="btnCancelEq">Cancelar</button></div></form></div><div class="panel"><h2>Equipamentos</h2><div class="twrap"><table><thead><tr><th>Nº Série</th><th>Cliente</th><th>Modelo</th><th>Status</th><th>QR</th><th>Ações</th></tr></thead><tbody id="tbEquips"></tbody></table></div></div></section>
+<section id="view-equipamentos" class="view"><div class="panel" id="panelEquipForm"><h2 id="equipPanelTitle">➕ Novo Equipamento</h2><form id="formEquip" class="fgrid"><input type="hidden" name="editId"><div><label>Nº Série *</label><input name="serie" required placeholder="NS_BC86-0001"></div><div><label>Cliente *</label><select name="cliente_id" id="selEquipCliente" required></select></div><div><label>Marca</label><input name="marca" value="BestCode"></div><div><label>Modelo</label><select name="modelo"><option>BestCode 81</option><option>BestCode 82</option><option>BestCode 86</option><option>BestCode 88</option><option>Quantum</option><option>Famjet TL300DK</option><option>DotJet DJ1</option><option>Outro</option></select></div><div><label>Local</label><input name="local"></div><div><label>Status</label><select name="status"><option>Operante</option><option>Parado</option><option>Em manutenção</option><option>Aguardando peça</option><option>Em teste</option><option>Baixado</option></select></div><div style="display:flex;gap:.5rem;align-self:end"><button type="submit" class="bp">Salvar</button><button type="button" class="bs" onclick="resetFormEq()" style="display:none" id="btnCancelEq">Cancelar</button></div></form></div><div class="panel"><h2>Equipamentos</h2><div class="twrap"><table><thead><tr><th>Nº Série</th><th>Cliente</th><th>Modelo</th><th>Status</th><th>QR</th><th>Ações</th></tr></thead><tbody id="tbEquips"></tbody></table></div></div></section>
 
 <section id="view-pecas" class="view"><div class="panel"><div class="fb"><h2 style="margin:0;border:0;padding:0">Catálogo de Peças</h2><span class="mut" id="pcCount"></span></div><div style="margin:1rem 0"><input type="text" id="searchPecas" placeholder="🔍 Buscar..." oninput="renderPc()" style="max-width:400px"></div><div class="twrap"><table><thead><tr><th>REF</th><th>Part</th><th>Descrição</th><th>Categoria</th><th>Compatível</th></tr></thead><tbody id="tbPecas"></tbody></table></div></div></section>
 
-<section id="view-os" class="view"><div class="panel"><h2>➕ Nova OS</h2><form id="formOS" class="fgrid"><div><label>Cliente *</label><select id="osCliente" onchange="filterOsEquip(this.value)" required><option value="">Selecione...</option></select></div><div><label>Equipamento *</label><select id="osEquip" name="equipamento_id" required disabled><option value="">Selecione cliente</option></select></div><div><label>Tipo</label><select name="tipo"><option>Corretiva</option><option>Preventiva</option><option>Orçamento</option><option>Laudo</option><option>Limpeza</option><option>Garantia</option></select></div><div><label>Técnico</label><input name="tecnico"></div><div><label>Prioridade</label><select name="prioridade"><option>Baixa</option><option selected>Média</option><option>Alta</option><option>Urgente</option></select></div><div style="grid-column:1/-1"><label>Defeito</label><textarea name="defeito"></textarea></div><div><button type="submit" class="bp">Abrir OS</button></div></form></div><div class="panel"><h2>Ordens de Serviço</h2><div class="twrap"><table><thead><tr><th>OS</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Defeito</th><th>Status</th></tr></thead><tbody id="tbOs"></tbody></table></div></div></section>
+<section id="view-os" class="view"><div class="panel" id="panelOsForm"><h2>➕ Nova OS</h2><form id="formOS" class="fgrid"><div><label>Cliente *</label><select id="osCliente" onchange="filterOsEquip(this.value)" required><option value="">Selecione...</option></select></div><div><label>Equipamento *</label><select id="osEquip" name="equipamento_id" required disabled><option value="">Selecione cliente</option></select></div><div><label>Tipo</label><select name="tipo"><option>Corretiva</option><option>Preventiva</option><option>Orçamento</option><option>Laudo</option><option>Limpeza</option><option>Garantia</option></select></div><div><label>Técnico</label><input name="tecnico"></div><div><label>Prioridade</label><select name="prioridade"><option>Baixa</option><option selected>Média</option><option>Alta</option><option>Urgente</option></select></div><div style="grid-column:1/-1"><label>Defeito</label><textarea name="defeito"></textarea></div><div><button type="submit" class="bp">Abrir OS</button></div></form></div><div class="panel"><h2>Ordens de Serviço</h2><div class="twrap"><table><thead><tr><th>OS</th><th>Data</th><th>Cliente</th><th>Equipamento</th><th>Defeito</th><th>Status</th></tr></thead><tbody id="tbOs"></tbody></table></div></div></section>
 
-<section id="view-os-detail" class="view"><div class="fb no-print" style="margin-bottom:1rem"><button class="bs" onclick="navigate('os')">← Voltar</button><div><button class="bs" onclick="window.print()">🖨️ PDF</button> <button class="bd bsm" onclick="delOsAtual()">Excluir</button></div></div><div class="panel"><div class="fb"><h2 id="detailOsNumero" style="margin:0;border:0;padding:0">OS</h2><span id="detailOsBadge" class="badge">Aberta</span></div><div class="fgrid" id="detailOsForm" style="margin-top:1rem"></div></div><div class="tabs no-print" id="osDetailTabs"></div><div id="tab-laudo" class="tab-content active panel"><h2>Laudo Técnico</h2><form id="formLaudo" class="fgrid"><div><label>Defeito Constatado</label><textarea name="constatado"></textarea></div><div><label>Causa</label><textarea name="causa"></textarea></div><div><label>Testes</label><textarea name="testes"></textarea></div><div><label>Serviços</label><textarea name="servicos"></textarea></div><div><label>Resultado</label><select name="resultado"><option value="">Pendente</option><option>Aprovado</option><option>Reprovado</option><option>Aguardando peça</option></select></div><div><button type="submit" class="bp">💾 Salvar Laudo</button></div></form></div><div id="tab-pecas-uso" class="tab-content panel"><h2>Peças Usadas</h2><div class="fgrid" style="grid-template-columns:2fr 1fr auto;align-items:end"><div><label>Buscar Peça</label><input id="uPecaSearch" list="dlPecas" oninput="onPecaSearch(this,'uMatch')"><div id="uMatch" class="match"></div></div><div><label>Qtd</label><input type="number" id="uQtd" min="1" value="1"></div><div><button class="bg bsm" onclick="addPecaUso()">Registrar</button></div></div><div class="twrap"><table><thead><tr><th>Peça</th><th>Qtd</th><th></th></tr></thead><tbody id="tbPecasUso"></tbody></table></div></div><div id="tab-fotos" class="tab-content panel"><h2>Fotos</h2><div class="pgrid" id="photoGrid"><label class="pupload"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><span style="font-size:2rem">📷</span><span style="font-size:.8rem">Adicionar</span></label></div></div><div id="tab-historico" class="tab-content panel"><h2>📜 Histórico</h2><div id="historicoTimeline"></div></div></section>
+<section id="view-os-detail" class="view"><div class="fb no-print" style="margin-bottom:1rem"><button class="bs" onclick="navigate('os')">← Voltar</button><div><button class="bs" onclick="window.print()">🖨️ PDF</button> <button class="bd bsm" id="btnDelOs" onclick="delOsAtual()">Excluir</button></div></div><div class="panel"><div class="fb"><h2 id="detailOsNumero" style="margin:0;border:0;padding:0">OS</h2><span id="detailOsBadge" class="badge">Aberta</span></div><div class="fgrid" id="detailOsForm" style="margin-top:1rem"></div></div><div class="tabs no-print" id="osDetailTabs"></div><div id="tab-laudo" class="tab-content active panel"><h2>Laudo Técnico</h2><form id="formLaudo" class="fgrid"><div><label>Defeito Constatado</label><textarea name="constatado"></textarea></div><div><label>Causa</label><textarea name="causa"></textarea></div><div><label>Testes</label><textarea name="testes"></textarea></div><div><label>Serviços</label><textarea name="servicos"></textarea></div><div><label>Resultado</label><select name="resultado"><option value="">Pendente</option><option>Aprovado</option><option>Reprovado</option><option>Aguardando peça</option></select></div><div><button type="submit" class="bp">💾 Salvar Laudo</button></div></form></div><div id="tab-pecas-uso" class="tab-content panel"><h2>Peças Usadas</h2><form id="formAddPecaUso" class="fgrid" style="grid-template-columns:2fr 1fr auto;align-items:end"><div><label>Buscar Peça</label><input id="uPecaSearch" list="dlPecas" oninput="onPecaSearch(this,'uMatch')"><div id="uMatch" class="match"></div></div><div><label>Qtd</label><input type="number" id="uQtd" min="1" value="1"></div><div><button class="bg bsm" onclick="addPecaUso()">Registrar</button></div></form><div class="twrap"><table><thead><tr><th>Peça</th><th>Qtd</th><th></th></tr></thead><tbody id="tbPecasUso"></tbody></table></div></div><div id="tab-fotos" class="tab-content panel"><h2>Fotos</h2><div class="pgrid" id="photoGrid"><label class="pupload" id="photoUploadLabel"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><span style="font-size:2rem">📷</span><span style="font-size:.8rem">Adicionar</span></label></div></div><div id="tab-historico" class="tab-content panel"><h2>📜 Histórico</h2><div id="historicoTimeline"></div></div></section>
+
+<section id="view-users" class="view"><div class="panel"><h2>👥 Usuários</h2><p class="mut">Gerencie usuários em Supabase → Authentication → Users. Promova/demova via tabela <code>profiles</code>.</p><div class="twrap"><table><thead><tr><th>E-mail</th><th>Perfil</th><th>Ativo</th><th>Ações</th></tr></thead><tbody id="tbUsers"></tbody></table></div></div></section>
 
 </div>
 <nav class="mnav" id="mobileNav"></nav>
@@ -163,10 +172,10 @@ th{background:#f9fafb;color:var(--mu)}
 <div id="toast" class="toast" style="display:none"></div>
 
 <script>
-var K_CFG='cmms_cfg_v30';
+var K_CFG='cmms_cfg_v31';
 var CFG=JSON.parse(localStorage.getItem(K_CFG)||'{}');
-var sb=null,ME=null;
-var DATA={clientes:[],equipamentos:[],pecas:[],os:[],visitas:[]};
+var sb=null,ME=null,PROFILE=null;
+var DATA={clientes:[],equipamentos:[],pecas:[],os:[],visitas:[],profiles:[]};
 var curOs=null,curEditVisita=null,tmpPecas=[];
 
 function $(i){return document.getElementById(i)}
@@ -176,15 +185,49 @@ function toast(m){var t=$('toast');t.innerHTML=m;t.style.display='block';setTime
 function fmtD(d){return d?new Date(d).toLocaleString('pt-BR'):'-'}
 function fmtDS(d){return d?new Date(d).toLocaleDateString('pt-BR'):'-'}
 
+// --- PERMISSÕES ---
+function can(action){
+  if(!PROFILE)return false;
+  if(PROFILE.role==='admin')return true;
+  var permissoes={
+    'tecnico':{
+      create:true,edit:true,delete:false,
+      create_os:true,edit_os:true,delete_os:false,
+      fill_laudo:true,add_peca_os:true,upload_foto:true,
+      create_visita:true,edit_visita:true,delete_visita:false
+    },
+    'visualizador':{
+      create:false,edit:false,delete:false,
+      create_os:false,edit_os:false,delete_os:false,
+      fill_laudo:false,add_peca_os:false,upload_foto:false,
+      create_visita:false,edit_visita:false,delete_visita:false
+    }
+  };
+  var p=permissoes[PROFILE.role]||{};
+  return p[action]||false;
+}
+function roleLabel(r){return{admin:'👑 Admin',tecnico:'🔧 Técnico',visualizador:'👁️ Visualizador'}[r]||r}
+
 // --- CONFIG ---
-window.onload=function(){
+window.onload=async function(){
   if(CFG.supabaseUrl && CFG.supabaseKey){
-    try{sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey);$('btnLogin').disabled=false}catch(e){console.error(e)}
-  }else{$('btnLogin').disabled=true}
+    try{
+      sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey);
+      $('btnLogin').disabled=false;
+      // Tenta sessão salva
+      var sess=await sb.auth.getSession();
+      if(sess.data.session){
+        $('loginEmail').value=sess.data.session.user.email;
+        $('loginStatus')&&($('loginStatus').textContent='✅ Sessão salva. Clique em Entrar.');
+      }
+    }catch(e){console.error(e)}
+  }else{
+    $('btnLogin').disabled=true;
+  }
   applyVisual();
 };
 
-function toggleConfig(){$('configPanel').classList.toggle('active');$('cfgSupabaseUrl').value=CFG.supabaseUrl||'';$('cfgSupabaseKey').value=CFG.supabaseKey||'';$('cfgImgbbKey').value=CFG.imgbbKey||'';$('cfgAppName').value=CFG.appName||'';$('logoStatus').textContent=CFG.logoUrl?'✅ Logo atual configurada':''}
+function toggleConfig(){$('configPanel').classList.toggle('active');$('cfgSupabaseUrl').value=CFG.supabaseUrl||'';$('cfgSupabaseKey').value=CFG.supabaseKey||'';$('cfgImgbbKey').value=CFG.imgbbKey||'';$('cfgAppName').value=CFG.appName||'';$('logoStatus').textContent=CFG.logoUrl?'✅ Logo atual':''}
 
 async function saveConfig(){
   CFG.supabaseUrl=$('cfgSupabaseUrl').value.trim();
@@ -226,20 +269,41 @@ async function doLogin(){
   var email=$('loginEmail').value.trim(),pass=$('loginPass').value;
   if(!email||!pass)return;
   $('btnLogin').innerHTML='<span class="loader"></span> Entrando...';
+  $('loginError').style.display='none';
   try{
     var res=await sb.auth.signInWithPassword({email:email,password:pass});
     if(res.error)throw res.error;
     ME=res.data.user;
+    
+    // Busca perfil na tabela profiles
+    var profRes=await sb.from('profiles').select('*').eq('id',ME.id).maybeSingle();
+    if(profRes.error){
+      throw new Error('Erro ao buscar perfil: '+profRes.error.message+'. Rode o SQL de criação de perfil.');
+    }
+    if(!profRes.data){
+      throw new Error('Perfil não encontrado. Rode o SQL para criar seu perfil de admin.');
+    }
+    PROFILE=profRes.data;
+    if(!PROFILE.ativo){
+      await sb.auth.signOut();
+      throw new Error('Usuário inativo. Contate o administrador.');
+    }
+    
     $('loginScreen').classList.add('hidden');
     $('appShell').style.display='block';
+    
+    // Mostra usuário e perfil no sidebar
+    $('sidebarUserName').textContent=PROFILE.nome||ME.email;
+    $('sidebarUserRole').innerHTML='<span class="role-badge role-'+PROFILE.role+'">'+roleLabel(PROFILE.role)+'</span>';
+    
     buildNavs();
     await loadAllData();
     if(DATA.pecas.length===0){toast('⏳ Carregando catálogo...');await loadDefaultCatalog()}
     navigate('dashboard');
-    toast('☁️ Conectado!');
+    toast('☁️ Conectado como '+roleLabel(PROFILE.role));
   }catch(e){
     $('btnLogin').textContent='Entrar';
-    $('loginError').textContent='Erro: '+(e.message||e);
+    $('loginError').textContent='❌ '+(e.message||e);
     $('loginError').style.display='block';
   }
 }
@@ -262,14 +326,15 @@ async function uploadToImgBB(data){
 // --- DATA ---
 async function loadAllData(){
   try{
-    var [c,e,p,o,v]=await Promise.all([
+    var [c,e,p,o,v,u]=await Promise.all([
       sb.from('clientes').select('*'),
       sb.from('equipamentos').select('*'),
       sb.from('pecas').select('*'),
       sb.from('ordens_servico').select('*').order('data_abertura',{ascending:false}),
-      sb.from('visitas').select('*').order('criado_em',{ascending:false})
+      sb.from('visitas').select('*').order('criado_em',{ascending:false}),
+      sb.from('profiles').select('*')
     ]);
-    DATA.clientes=c.data||[];DATA.equipamentos=e.data||[];DATA.pecas=p.data||[];DATA.os=o.data||[];DATA.visitas=v.data||[];
+    DATA.clientes=c.data||[];DATA.equipamentos=e.data||[];DATA.pecas=p.data||[];DATA.os=o.data||[];DATA.visitas=v.data||[];DATA.profiles=u.data||[];
     rebuildDatalist();
   }catch(e){toast('❌ Erro: '+e.message)}
 }
@@ -287,11 +352,15 @@ async function loadDefaultCatalog(){
 }
 
 // --- NAV ---
-var NAV=[['dashboard','📊','Dash',1],['os','🔧','OS',1],['visitas','🚗','Visitas',1],['clientes','👥','Clientes',0],['equipamentos','🖥️','Equip.',0],['pecas','🔩','Peças',0],['reports','📊','Relatórios',0]];
-function buildNavs(){var s='',m='',d='';NAV.forEach(function(it){s+='<button class="sitem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)">'+it[1]+' '+it[2]+'</button>';if(it[3])m+='<button class="mbtn" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)"><span class="icon">'+it[1]+'</span>'+it[2]+'</button>';else d+='<button class="ditem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\');toggleDrawer()">'+it[1]+' '+it[2]+'</button>'});
+function getMenuItems(){
+  var items=[['dashboard','📊','Dash',1],['os','🔧','OS',1],['visitas','🚗','Visitas',1],['clientes','👥','Clientes',0],['equipamentos','🖥️','Equip.',0],['pecas','🔩','Peças',0],['reports','📊','Relatórios',0]];
+  if(PROFILE && PROFILE.role==='admin'){items.push(['users','👥','Usuários',0])}
+  return items;
+}
+function buildNavs(){var items=getMenuItems();var s='',m='',d='';items.forEach(function(it){s+='<button class="sitem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)">'+it[1]+' '+it[2]+'</button>';if(it[3])m+='<button class="mbtn" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)"><span class="icon">'+it[1]+'</span>'+it[2]+'</button>';else d+='<button class="ditem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\');toggleDrawer()">'+it[1]+' '+it[2]+'</button>'});
 m+='<button class="mbtn" onclick="toggleDrawer()"><span class="icon">☰</span>Mais</button>';$('sidebarNav').innerHTML=s;$('mobileNav').innerHTML=m;$('drawerItems').innerHTML=d}
-function navigate(v,btn){var map={dashboard:'view-dashboard',visitas:'view-visitas','visita-form':'view-visita-form',reports:'view-reports',clientes:'view-clientes','cliente-historico':'view-cliente-historico',equipamentos:'view-equipamentos',pecas:'view-pecas',os:'view-os','os-detail':'view-os-detail'};document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});var t=$(map[v]);if(t)t.classList.add('active');document.querySelectorAll('[data-nav]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-nav')===v)});refresh(v)}
-function refresh(v){if(v==='dashboard')renderDash();else if(v==='visitas')renderVisitas();else if(v==='reports')applyFilters();else if(v==='clientes')renderCli();else if(v==='equipamentos')renderEq();else if(v==='pecas')renderPc();else if(v==='os')renderOs()}
+function navigate(v,btn){var map={dashboard:'view-dashboard',visitas:'view-visitas','visita-form':'view-visita-form',reports:'view-reports',clientes:'view-clientes','cliente-historico':'view-cliente-historico',equipamentos:'view-equipamentos',pecas:'view-pecas',os:'view-os','os-detail':'view-os-detail',users:'view-users'};document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});var t=$(map[v]);if(t)t.classList.add('active');document.querySelectorAll('[data-nav]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-nav')===v)});refresh(v)}
+function refresh(v){if(v==='dashboard')renderDash();else if(v==='visitas')renderVisitas();else if(v==='reports')applyFilters();else if(v==='clientes')renderCli();else if(v==='equipamentos')renderEq();else if(v==='pecas')renderPc();else if(v==='os')renderOs();else if(v==='users')renderUsers()}
 function toggleDrawer(){$('drawer').classList.toggle('active');$('drawerOverlay').classList.toggle('active')}
 function badge(s){var m={'Aberta':'badge-open','Concluída':'badge-done','Aguardando peça':'badge-wait','Em análise':'badge-prog','Em manutenção':'badge-prog','Em teste':'badge-prog','Cancelada':'badge-wait'};return'<span class="badge '+(m[s]||'badge-open')+'">'+esc(s)+'</span>'}
 function rebuildDatalist(){$('dlPecas').innerHTML=DATA.pecas.map(function(p){return'<option value="'+esc(p.codigo||'')+'">'+esc((p.ref?p.ref+' | ':'')+(p.codigo||'')+' - '+p.descricao)+'</option>'}).join('')}
@@ -299,35 +368,36 @@ function findPiece(t){if(!t)return null;t=t.trim().toLowerCase();var P=DATA.peca
 function onPecaSearch(inp,mid){var d=$(mid);var p=findPiece(inp.value);if(p){d.textContent='✅ '+(p.ref?p.ref+' | ':'')+p.codigo+' — '+p.descricao;d.classList.add('visible');d.setAttribute('data-id',p.id)}else{d.textContent=inp.value.trim()?'❌ Não encontrada':'';d.classList.toggle('visible',!!inp.value.trim());d.removeAttribute('data-id')}}
 
 // --- CLIENTES ---
-async function renderCli(){$('selEquipCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');$('tbClientes').innerHTML=DATA.clientes.map(function(c){return'<tr><td>'+esc(c.nome)+'</td><td>'+esc(c.tipo)+'</td><td>'+esc(c.telefone||'-')+'</td><td><button class="bi bsm" onclick="openHist(\''+c.id+'\')">📋</button> <button class="bw bsm" onclick="editCli(\''+c.id+'\')">✏️</button> <button class="bd bsm" onclick="delCli(\''+c.id+'\')">✕</button></td></tr>'}).join('')||'<tr><td colspan="4" class="mut">Nenhum.</td></tr>'}
+async function renderCli(){$('selEquipCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');$('panelClienteForm').style.display=can('create')?'':'none';$('tbClientes').innerHTML=DATA.clientes.map(function(c){var a='<button class="bi bsm" onclick="openHist(\''+c.id+'\')">📋</button>';if(can('edit'))a+=' <button class="bw bsm" onclick="editCli(\''+c.id+'\')">✏️</button>';if(can('delete'))a+=' <button class="bd bsm" onclick="delCli(\''+c.id+'\')">✕</button>';return'<tr><td>'+esc(c.nome)+'</td><td>'+esc(c.tipo)+'</td><td>'+esc(c.telefone||'-')+'</td><td>'+a+'</td></tr>'}).join('')||'<tr><td colspan="4" class="mut">Nenhum.</td></tr>'}
 function resetFormCli(){$('formCliente').reset();$('formCliente').editId.value='';$('btnCancelCli').style.display='none';$('clientePanelTitle').textContent='➕ Novo Cliente'}
-function editCli(id){var c=DATA.clientes.find(function(x){return x.id===id});if(!c)return;var f=$('formCliente');f.nome.value=c.nome;f.tipo.value=c.tipo;f.telefone.value=c.telefone||'';f.email.value=c.email||'';f.obs.value=c.obs||'';f.editId.value=id;$('clientePanelTitle').textContent='✏️ Editar';$('btnCancelCli').style.display=''}
+function editCli(id){if(!can('edit'))return;var c=DATA.clientes.find(function(x){return x.id===id});if(!c)return;var f=$('formCliente');f.nome.value=c.nome;f.tipo.value=c.tipo;f.telefone.value=c.telefone||'';f.email.value=c.email||'';f.obs.value=c.obs||'';f.editId.value=id;$('clientePanelTitle').textContent='✏️ Editar';$('btnCancelCli').style.display=''}
 document.getElementById('formCliente').addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(this);var eid=fd.get('editId');var p={nome:fd.get('nome').trim(),tipo:fd.get('tipo'),telefone:fd.get('telefone').trim(),email:fd.get('email').trim(),obs:fd.get('obs').trim()};
-var res;if(eid)res=await sb.from('clientes').update(p).eq('id',eid);else res=await sb.from('clientes').insert(p);
+var res;if(eid){if(!can('edit'))return;res=await sb.from('clientes').update(p).eq('id',eid)}else{if(!can('create'))return;res=await sb.from('clientes').insert(p)}
 if(res.error){toast('❌ '+(res.error.message||res.error));return}
 await loadAllData();resetFormCli();toast('✅')});
-async function delCli(id){if(!confirm('Excluir?'))return;var res=await sb.from('clientes').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
-function openHist(cid){var cl=DATA.clientes.find(function(c){return c.id===cid});if(!cl)return;navigate('cliente-historico');$('clienteHistTitle').textContent='📋 '+cl.nome;var all=[];DATA.os.forEach(function(o){if(o.cliente_id===cid)all.push({d:o.data_abertura,t:'🔧 '+o.numero,b:o.defeito||'',s:o.status})});DATA.visitas.forEach(function(v){if(v.cliente_id===cid)all.push({d:v.data||v.criado_em,t:'🚗 '+v.numero,b:v.falha||''})});all.sort(function(a,b){return new Date(b.d)-new Date(a.d)});$('clienteHistContent').innerHTML=all.length?all.map(function(i){return'<p><b>'+esc(fmtD(i.d))+'</b> — '+esc(i.t)+'<br>'+esc(i.b)+(i.s?'<br><span class="badge badge-open">'+esc(i.s)+'</span>':'')+'</p>'}).join(''):'<p class="mut">Sem histórico.</p>'}
+async function delCli(id){if(!can('delete')){toast('⛔ Apenas admin');return}if(!confirm('Excluir?'))return;var res=await sb.from('clientes').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
+function openHist(cid){var cl=DATA.clientes.find(function(c){return c.id===cid});if(!cl)return;navigate('cliente-historico');$('clienteHistTitle').textContent='📋 '+cl.nome;var all=[];DATA.os.forEach(function(o){if(o.cliente_id===cid)all.push({d:o.data_abertura,t:'🔧 '+o.numero,b:o.defeito||'',s:o.status})});DATA.visitas.forEach(function(v){if(v.cliente_id===cid)all.push({d:v.data||v.criado_em,t:'🚗 '+v.numero,b:v.falha||''})});all.sort(function(a,b){return new Date(b.d)-new Date(a.d)});$('clienteHistContent').innerHTML=all.length?all.map(function(i){return'<p><b>'+esc(fmtD(i.d))+'</b> — '+esc(i.t)+'<br>'+esc(i.b)+(i.s?'<br>'+badge(i.s):'')+'</p>'}).join(''):'<p class="mut">Sem histórico.</p>'}
 
 // --- EQUIPAMENTOS ---
-async function renderEq(){$('selEquipCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');$('tbEquips').innerHTML=DATA.equipamentos.map(function(e){var cl=DATA.clientes.find(function(c){return c.id===e.cliente_id});return'<tr><td><strong>'+esc(e.serie)+'</strong></td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(e.modelo)+'</td><td>'+esc(e.status)+'</td><td><button class="bi bsm" onclick="openQr(\''+e.id+'\')">🔲</button> <button class="bw bsm" onclick="editEq(\''+e.id+'\')">✏️</button> <button class="bd bsm" onclick="delEq(\''+e.id+'\')">✕</button></td></tr>'}).join('')||'<tr><td colspan="6" class="mut">Nenhum.</td></tr>'}
+async function renderEq(){$('selEquipCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');$('panelEquipForm').style.display=can('create')?'':'none';$('tbEquips').innerHTML=DATA.equipamentos.map(function(e){var cl=DATA.clientes.find(function(c){return c.id===e.cliente_id});var a='<button class="bi bsm" onclick="openQr(\''+e.id+'\')">🔲</button>';if(can('edit'))a+=' <button class="bw bsm" onclick="editEq(\''+e.id+'\')">✏️</button>';if(can('delete'))a+=' <button class="bd bsm" onclick="delEq(\''+e.id+'\')">✕</button>';return'<tr><td><strong>'+esc(e.serie)+'</strong></td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(e.modelo)+'</td><td>'+esc(e.status)+'</td><td>'+a+'</td></tr>'}).join('')||'<tr><td colspan="6" class="mut">Nenhum.</td></tr>'}
 function resetFormEq(){$('formEquip').reset();$('formEquip').editId.value='';$('btnCancelEq').style.display='none';$('equipPanelTitle').textContent='➕ Novo Equipamento'}
-function editEq(id){var e=DATA.equipamentos.find(function(x){return x.id===id});if(!e)return;var f=$('formEquip');f.serie.value=e.serie;f.cliente_id.value=e.cliente_id;f.marca.value=e.marca||'BestCode';f.modelo.value=e.modelo;f.local.value=e.local||'';f.status.value=e.status;f.editId.value=id;$('equipPanelTitle').textContent='✏️ Editar';$('btnCancelEq').style.display=''}
+function editEq(id){if(!can('edit'))return;var e=DATA.equipamentos.find(function(x){return x.id===id});if(!e)return;var f=$('formEquip');f.serie.value=e.serie;f.cliente_id.value=e.cliente_id;f.marca.value=e.marca||'BestCode';f.modelo.value=e.modelo;f.local.value=e.local||'';f.status.value=e.status;f.editId.value=id;$('equipPanelTitle').textContent='✏️ Editar';$('btnCancelEq').style.display=''}
 document.getElementById('formEquip').addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(this);var eid=fd.get('editId');var p={serie:fd.get('serie').trim(),cliente_id:fd.get('cliente_id'),marca:fd.get('marca').trim()||'BestCode',modelo:fd.get('modelo'),local:fd.get('local').trim(),status:fd.get('status')};
 if(!p.cliente_id){alert('Selecione cliente.');return}
-var res;if(eid)res=await sb.from('equipamentos').update(p).eq('id',eid);else res=await sb.from('equipamentos').insert(p);
+var res;if(eid){if(!can('edit'))return;res=await sb.from('equipamentos').update(p).eq('id',eid)}else{if(!can('create'))return;res=await sb.from('equipamentos').insert(p)}
 if(res.error){toast('❌ '+(res.error.message||res.error));return}
 await loadAllData();resetFormEq();toast('✅')});
-async function delEq(id){if(!confirm('Excluir?'))return;var res=await sb.from('equipamentos').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
+async function delEq(id){if(!can('delete')){toast('⛔ Apenas admin');return}if(!confirm('Excluir?'))return;var res=await sb.from('equipamentos').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
 
 // --- PEÇAS ---
 function renderPc(){var s=($('searchPecas')?$('searchPecas').value:'').toLowerCase().trim();var f=s?DATA.pecas.filter(function(p){return(p.codigo||'').toLowerCase().indexOf(s)>=0||(p.descricao||'').toLowerCase().indexOf(s)>=0||(p.compativel||'').toLowerCase().indexOf(s)>=0||(p.ref||'').toLowerCase().indexOf(s)>=0}):DATA.pecas;$('pcCount').textContent=f.length+' peças';$('tbPecas').innerHTML=f.map(function(p){return'<tr><td>'+(p.ref?esc(p.ref):'-')+'</td><td><code>'+esc(p.codigo||'-')+'</code></td><td>'+esc(p.descricao)+'</td><td>'+esc(p.categoria||'-')+'</td><td>'+esc(p.compativel||'-')+'</td></tr>'}).join('')||'<tr><td colspan="5" class="mut">Vazio.</td></tr>'}
 
 // --- OS ---
 function filterOsEquip(ci){var es=$('osEquip');if(!ci){es.innerHTML='<option value="">Selecione cliente</option>';es.disabled=true;return}var eqs=DATA.equipamentos.filter(function(e){return e.cliente_id===ci});es.innerHTML='<option value="">Selecione...</option>'+eqs.map(function(e){return'<option value="'+e.id+'">'+esc(e.serie)+' - '+esc(e.modelo)+'</option>'}).join('');es.disabled=false}
-async function renderOs(){$('osCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');filterOsEquip('');$('tbOs').innerHTML=DATA.os.map(function(o){var eq=DATA.equipamentos.find(function(e){return e.id===o.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===o.cliente_id});return'<tr class="crow" onclick="openOs(\''+o.id+'\')"><td><b>'+esc(o.numero)+'</b></td><td>'+esc(fmtD(o.data_abertura))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(o.defeito||'-')+'</td><td>'+badge(o.status)+'</td></tr>'}).join('')||'<tr><td colspan="6" class="mut">Nenhuma.</td></tr>'}
+async function renderOs(){$('osCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');filterOsEquip('');$('panelOsForm').style.display=can('create_os')?'':'none';$('tbOs').innerHTML=DATA.os.map(function(o){var eq=DATA.equipamentos.find(function(e){return e.id===o.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===o.cliente_id});return'<tr class="crow" onclick="openOs(\''+o.id+'\')"><td><b>'+esc(o.numero)+'</b></td><td>'+esc(fmtD(o.data_abertura))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(o.defeito||'-')+'</td><td>'+badge(o.status)+'</td></tr>'}).join('')||'<tr><td colspan="6" class="mut">Nenhuma.</td></tr>'}
 document.getElementById('formOS').addEventListener('submit',async function(e){
   e.preventDefault();
+  if(!can('create_os')){toast('⛔ Sem permissão');return}
   var fd=new FormData(this);
   var ei=$('osEquip').value,ci=$('osCliente').value;
   if(!ci||!ei){alert('Selecione cliente e equipamento.');return}
@@ -338,7 +408,7 @@ document.getElementById('formOS').addEventListener('submit',async function(e){
     numero:prefix+n,
     cliente_id:ci,
     equipamento_id:ei,
-    tecnico:fd.get('tecnico').trim()||ME.email,
+    tecnico:fd.get('tecnico').trim()||(PROFILE.nome||ME.email),
     tipo:fd.get('tipo'),
     prioridade:fd.get('prioridade')||'Média',
     status:'Aberta',
@@ -359,16 +429,18 @@ document.getElementById('formOS').addEventListener('submit',async function(e){
   }
 });
 
-async function openOs(id){var os=DATA.os.find(function(o){return o.id===id});if(!os)return;curOs=os;navigate('os-detail');$('detailOsNumero').textContent=os.numero;$('detailOsBadge').outerHTML=badge(os.status).replace('class="badge','id="detailOsBadge" class="badge');var eq=DATA.equipamentos.find(function(e){return e.id===os.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===os.cliente_id});$('detailOsForm').innerHTML='<div><label>Cliente</label><input value="'+esc(cl?cl.nome:'-')+'" disabled></div><div><label>Equipamento</label><input value="'+esc(eq?eq.serie:'-')+'" disabled></div><div><label>Técnico</label><input value="'+esc(os.tecnico||'')+'" onchange="updOs(\'tecnico\',this.value)"></div><div><label>Status</label><select onchange="updOs(\'status\',this.value)">'+['Aberta','Em análise','Aguardando peça','Em manutenção','Em teste','Concluída','Cancelada'].map(function(s){return'<option'+(os.status===s?' selected':'')+'>'+s+'</option>'}).join('')+'</select></div><div style="grid-column:1/-1"><label>Defeito</label><textarea disabled>'+esc(os.defeito||'')+'</textarea></div>';$('osDetailTabs').innerHTML='<button class="tab-btn active" onclick="switchTab(\'laudo\',this)">📝 Laudo</button><button class="tab-btn" onclick="switchTab(\'pecas-uso\',this)">🔩 Usadas</button><button class="tab-btn" onclick="switchTab(\'fotos\',this)">📸 Fotos</button><button class="tab-btn" onclick="switchTab(\'historico\',this)">📜 Hist.</button>';
-var lf=$('formLaudo');
+async function openOs(id){var os=DATA.os.find(function(o){return o.id===id});if(!os)return;curOs=os;navigate('os-detail');$('detailOsNumero').textContent=os.numero;$('detailOsBadge').outerHTML=badge(os.status).replace('class="badge','id="detailOsBadge" class="badge');var eq=DATA.equipamentos.find(function(e){return e.id===os.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===os.cliente_id});var ce=can('edit_os');$('detailOsForm').innerHTML='<div><label>Cliente</label><input value="'+esc(cl?cl.nome:'-')+'" disabled></div><div><label>Equipamento</label><input value="'+esc(eq?eq.serie:'-')+'" disabled></div><div><label>Técnico</label>'+(ce?'<input value="'+esc(os.tecnico||'')+'" onchange="updOs(\'tecnico\',this.value)">':'<input value="'+esc(os.tecnico||'-')+'" disabled>')+'</div><div><label>Status</label>'+(ce?'<select onchange="updOs(\'status\',this.value)">'+['Aberta','Em análise','Aguardando peça','Em manutenção','Em teste','Concluída','Cancelada'].map(function(s){return'<option'+(os.status===s?' selected':'')+'>'+s+'</option>'}).join('')+'</select>':'<input value="'+esc(os.status)+'" disabled>')+'</div><div style="grid-column:1/-1"><label>Defeito</label><textarea disabled>'+esc(os.defeito||'')+'</textarea></div>';$('btnDelOs').style.display=can('delete_os')?'inline-block':'none';$('osDetailTabs').innerHTML='<button class="tab-btn active" onclick="switchTab(\'laudo\',this)">📝 Laudo</button><button class="tab-btn" onclick="switchTab(\'pecas-uso\',this)">🔩 Usadas</button><button class="tab-btn" onclick="switchTab(\'fotos\',this)">📸 Fotos</button><button class="tab-btn" onclick="switchTab(\'historico\',this)">📜 Hist.</button>';
+var lf=$('formLaudo');var cf=can('fill_laudo');for(var i=0;i<lf.elements.length;i++){if(lf.elements[i].name)lf.elements[i].disabled=!cf}$('formLaudo').querySelector('button[type=submit]').style.display=cf?'':'none';
+$('formAddPecaUso').style.display=can('add_peca_os')?'':'none';$('photoUploadLabel').style.display=can('upload_foto')?'':'none';
 var lResp=await sb.from('laudos').select('*').eq('os_id',os.id).maybeSingle();
 var l=(lResp&&lResp.data)||{};
 lf.constatado.value=l.defeito_constatado||'';lf.causa.value=l.causa||'';lf.testes.value=l.testes||'';lf.servicos.value=l.servicos||'';lf.resultado.value=l.resultado||'';
 renderOsPecas();renderPhotos();renderHist()}
-function updOs(f,v){sb.from('ordens_servico').update({[f]:v}).eq('id',curOs.id).then(function(){curOs[f]=v;if(f==='status')$('detailOsBadge').outerHTML=badge(v).replace('class="badge','id="detailOsBadge" class="badge')})}
+function updOs(f,v){if(!can('edit_os')){toast('⛔');return}sb.from('ordens_servico').update({[f]:v}).eq('id',curOs.id).then(function(){curOs[f]=v;if(f==='status')$('detailOsBadge').outerHTML=badge(v).replace('class="badge','id="detailOsBadge" class="badge')})}
 function switchTab(t,btn){document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});$('tab-'+t).classList.add('active');document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});btn.classList.add('active')}
 document.getElementById('formLaudo').addEventListener('submit',async function(e){
   e.preventDefault();
+  if(!can('fill_laudo')){toast('⛔');return}
   var fd=new FormData(this);
   var payload={os_id:curOs.id,defeito_constatado:fd.get('constatado').trim(),causa:fd.get('causa').trim(),testes:fd.get('testes').trim(),servicos:fd.get('servicos').trim(),resultado:fd.get('resultado')};
   try{
@@ -383,9 +455,10 @@ document.getElementById('formLaudo').addEventListener('submit',async function(e)
 async function renderOsPecas(){
   var res=await sb.from('os_pecas').select('*').eq('os_id',curOs.id).eq('tipo','usada');
   var pu=res.data||[];
-  $('tbPecasUso').innerHTML=pu.length?pu.map(function(p){var pc=DATA.pecas.find(function(x){return x.id===p.peca_id});return'<tr><td>'+esc(pc?(pc.codigo+' - '+pc.descricao):'?')+'</td><td>'+p.qtd+'</td><td><button class="bd bsm" onclick="delPU(\''+p.id+'\')">✕</button></td></tr>'}).join(''):'<tr><td colspan="3" class="mut">Nenhuma.</td></tr>';
+  $('tbPecasUso').innerHTML=pu.length?pu.map(function(p){var pc=DATA.pecas.find(function(x){return x.id===p.peca_id});return'<tr><td>'+esc(pc?(pc.codigo+' - '+pc.descricao):'?')+'</td><td>'+p.qtd+'</td><td>'+(can('add_peca_os')?'<button class="bd bsm" onclick="delPU(\''+p.id+'\')">✕</button>':'')+'</td></tr>'}).join(''):'<tr><td colspan="3" class="mut">Nenhuma.</td></tr>';
 }
 async function addPecaUso(){
+  if(!can('add_peca_os')){toast('⛔');return}
   var d=$('uMatch');var pid=d.getAttribute('data-id');
   if(!pid){alert('Selecione peça.');return}
   try{
@@ -396,17 +469,18 @@ async function addPecaUso(){
     $('uPecaSearch').value='';d.classList.remove('visible');
   }catch(err){toast('❌ '+(err.message||err))}
 }
-async function delPU(id){if(!confirm('Remover?'))return;var res=await sb.from('os_pecas').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await renderOsPecas()}
-async function delOsAtual(){if(!confirm('Excluir OS?'))return;await sb.from('ordens_servico').delete().eq('id',curOs.id);await loadAllData();navigate('os')}
+async function delPU(id){if(!can('add_peca_os')){toast('⛔');return}if(!confirm('Remover?'))return;var res=await sb.from('os_pecas').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await renderOsPecas()}
+async function delOsAtual(){if(!can('delete_os')){toast('⛔ Apenas admin');return}if(!confirm('Excluir OS?'))return;await sb.from('ordens_servico').delete().eq('id',curOs.id);await loadAllData();navigate('os')}
 
 async function renderPhotos(){
   var res=await sb.from('fotos').select('*').eq('os_id',curOs.id).order('criado_em');
   var fotos=res.data||[];
   var g=$('photoGrid');var up=g.querySelector('.pupload');
   g.querySelectorAll('.pcard').forEach(function(c){c.remove()});
-  fotos.forEach(function(f){var d=document.createElement('div');d.className='pcard';d.innerHTML='<img src="'+f.url+'" onclick="openLb(\''+f.url+'\')"><button class="remove-photo" onclick="delFoto(\''+f.id+'\')">✕</button>';g.insertBefore(d,up)});
+  fotos.forEach(function(f){var d=document.createElement('div');d.className='pcard';d.innerHTML='<img src="'+f.url+'" onclick="openLb(\''+f.url+'\')">'+(can('upload_foto')?'<button class="remove-photo" onclick="delFoto(\''+f.id+'\')">✕</button>':'');g.insertBefore(d,up)});
 }
 async function addPhotos(inp){
+  if(!can('upload_foto')){toast('⛔');return}
   Array.from(inp.files).forEach(async function(f){
     if(f.size>2000000){toast('⚠️ >2MB');return}
     toast('⏳ Enviando foto...');
@@ -425,14 +499,14 @@ async function addPhotos(inp){
   });
   inp.value='';
 }
-async function delFoto(id){if(!confirm('Remover?'))return;var res=await sb.from('fotos').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await renderPhotos()}
+async function delFoto(id){if(!can('upload_foto')){toast('⛔');return}if(!confirm('Remover?'))return;var res=await sb.from('fotos').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await renderPhotos()}
 function openLb(s){$('lightboxImg').src=s;$('lightbox').classList.add('active')}
-function renderHist(){var all=[];DATA.os.forEach(function(o){if(o.equipamento_id===curOs.equipamento_id)all.push({d:o.data_abertura,t:'🔧 '+o.numero,b:o.defeito||'',s:o.status})});DATA.visitas.forEach(function(v){if(v.equipamento_id===curOs.equipamento_id)all.push({d:v.data||v.criado_em,t:'🚗 '+v.numero,b:v.falha||''})});all.sort(function(a,b){return new Date(b.d)-new Date(a.d)});$('historicoTimeline').innerHTML=all.length?all.map(function(i){return'<p><b>'+esc(fmtD(i.d))+'</b> — '+esc(i.t)+'<br>'+esc(i.b)+(i.s?'<br><span class="badge badge-open">'+esc(i.s)+'</span>':'')+'</p>'}).join(''):'<p class="mut">Sem histórico.</p>'}
+function renderHist(){var all=[];DATA.os.forEach(function(o){if(o.equipamento_id===curOs.equipamento_id)all.push({d:o.data_abertura,t:'🔧 '+o.numero,b:o.defeito||'',s:o.status})});DATA.visitas.forEach(function(v){if(v.equipamento_id===curOs.equipamento_id)all.push({d:v.data||v.criado_em,t:'🚗 '+v.numero,b:v.falha||''})});all.sort(function(a,b){return new Date(b.d)-new Date(a.d)});$('historicoTimeline').innerHTML=all.length?all.map(function(i){return'<p><b>'+esc(fmtD(i.d))+'</b> — '+esc(i.t)+'<br>'+esc(i.b)+(i.s?'<br>'+badge(i.s):'')+'</p>'}).join(''):'<p class="mut">Sem histórico.</p>'}
 function openQr(eid){var e=DATA.equipamentos.find(function(x){return x.id===eid});if(!e)return;var url='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent('CMMS|'+e.serie+'|'+e.modelo);var w=window.open('','_blank');if(!w){alert('Permita popups');return}w.document.write('<body style="font-family:Arial;text-align:center;padding:20px"><img src="'+url+'" style="width:180px;height:180px"><br><b>'+esc(e.serie)+'</b><br>'+esc(e.modelo)+'</body>');w.document.close();setTimeout(function(){try{w.print()}catch(err){}},600)}
 
 // --- VISITAS ---
-async function renderVisitas(){$('tbVisitas').innerHTML=DATA.visitas.map(function(v){var cl=DATA.clientes.find(function(c){return c.id===v.cliente_id});var eq=DATA.equipamentos.find(function(e){return e.id===v.equipamento_id});return'<tr><td><b>'+esc(v.numero)+'</b></td><td>'+esc(fmtDS(v.data))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(v.tecnico||'-')+'</td><td>'+esc(v.tipo_chamada||'-')+'</td><td><button class="bw bsm" onclick="openVisitaForm(\''+v.id+'\')">✏️</button> <button class="bd bsm" onclick="delVisita(\''+v.id+'\')">✕</button></td></tr>'}).join('')||'<tr><td colspan="7" class="mut">Nenhuma.</td></tr>'}
-function openVisitaForm(id){curEditVisita=id||null;navigate('visita-form');$('vCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');initSig();clearSig();if(id){var v=DATA.visitas.find(function(x){return x.id===id});if(!v)return;$('visitaFormTitle').textContent='✏️ Editar';$('visitaNumero').textContent=v.numero;$('vCliente').value=v.cliente_id;vClienteChanged();setTimeout(function(){$('vEquip').value=v.equipamento_id;vEquipChanged()},50);$('vTecnico').value=v.tecnico||'';$('vContrManut').value=v.contr_manut||'N';$('vFalha').value=v.falha||'';$('vServico').value=v.servico||'';$('vLaudo').value=v.laudo||'';$('vData').value=v.data?v.data.slice(0,10):'';$('vSaidaTesla').value=v.saida_tesla||'';$('vChegadaCliente').value=v.chegada_cliente||'';$('vSaidaCliente').value=v.saida_cliente||'';$('vChegadaTesla').value=v.chegada_tesla||'';$('vKm').value=v.km||'';$('vServicoHN').value=v.servico_hn||'';$('vDeslocHN').value=v.desloc_hn||'';$('vObs').value=v.obs||'';$('vNomeExtenso').value=v.nome_extenso||'';$('vCargo').value=v.cargo||'';document.querySelectorAll('input[name=vTipo]').forEach(function(r){r.checked=(r.value===v.tipo_chamada)});tmpPecas=[];renderPecasVisita()}else{$('visitaFormTitle').textContent='🚗 Nova Visita';$('visitaNumero').textContent='';$('vCliente').value='';$('vEquip').innerHTML='<option value="">Selecione cliente</option>';$('vEquip').disabled=true;$('vTecnico').value=ME.email;$('vContrManut').value='N';$('vFalha').value='';$('vServico').value='';$('vLaudo').value='';$('vData').value=new Date().toISOString().slice(0,10);document.querySelectorAll('input[name=vTipo]').forEach(function(r){r.checked=(r.value==='Manutenção')});tmpPecas=[];renderPecasVisita()}}
+async function renderVisitas(){$('btnNovaVisita').style.display=can('create_visita')?'':'none';$('tbVisitas').innerHTML=DATA.visitas.map(function(v){var cl=DATA.clientes.find(function(c){return c.id===v.cliente_id});var eq=DATA.equipamentos.find(function(e){return e.id===v.equipamento_id});var a='<button class="bw bsm" onclick="openVisitaForm(\''+v.id+'\')">✏️</button>';if(can('delete_visita'))a+=' <button class="bd bsm" onclick="delVisita(\''+v.id+'\')">✕</button>';return'<tr><td><b>'+esc(v.numero)+'</b></td><td>'+esc(fmtDS(v.data))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(v.tecnico||'-')+'</td><td>'+esc(v.tipo_chamada||'-')+'</td><td>'+a+'</td></tr>'}).join('')||'<tr><td colspan="7" class="mut">Nenhuma.</td></tr>'}
+function openVisitaForm(id){if(!can('create_visita')&&!can('edit_visita')){toast('⛔');return}curEditVisita=id||null;navigate('visita-form');$('vCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');initSig();clearSig();if(id){var v=DATA.visitas.find(function(x){return x.id===id});if(!v)return;$('visitaFormTitle').textContent='✏️ Editar';$('visitaNumero').textContent=v.numero;$('vCliente').value=v.cliente_id;vClienteChanged();setTimeout(function(){$('vEquip').value=v.equipamento_id;vEquipChanged()},50);$('vTecnico').value=v.tecnico||'';$('vContrManut').value=v.contr_manut||'N';$('vFalha').value=v.falha||'';$('vServico').value=v.servico||'';$('vLaudo').value=v.laudo||'';$('vData').value=v.data?v.data.slice(0,10):'';$('vSaidaTesla').value=v.saida_tesla||'';$('vChegadaCliente').value=v.chegada_cliente||'';$('vSaidaCliente').value=v.saida_cliente||'';$('vChegadaTesla').value=v.chegada_tesla||'';$('vKm').value=v.km||'';$('vServicoHN').value=v.servico_hn||'';$('vDeslocHN').value=v.desloc_hn||'';$('vObs').value=v.obs||'';$('vNomeExtenso').value=v.nome_extenso||'';$('vCargo').value=v.cargo||'';document.querySelectorAll('input[name=vTipo]').forEach(function(r){r.checked=(r.value===v.tipo_chamada)});tmpPecas=[];renderPecasVisita()}else{$('visitaFormTitle').textContent='🚗 Nova Visita';$('visitaNumero').textContent='';$('vCliente').value='';$('vEquip').innerHTML='<option value="">Selecione cliente</option>';$('vEquip').disabled=true;$('vTecnico').value=PROFILE.nome||ME.email;$('vContrManut').value='N';$('vFalha').value='';$('vServico').value='';$('vLaudo').value='';$('vData').value=new Date().toISOString().slice(0,10);document.querySelectorAll('input[name=vTipo]').forEach(function(r){r.checked=(r.value==='Manutenção')});tmpPecas=[];renderPecasVisita()}}
 function vClienteChanged(){var ci=$('vCliente').value;var es=$('vEquip');if(!ci){es.disabled=true;return}var eqs=DATA.equipamentos.filter(function(e){return e.cliente_id===ci});es.innerHTML='<option value="">Selecione...</option>'+eqs.map(function(e){return'<option value="'+e.id+'">'+esc(e.serie)+' - '+esc(e.modelo)+'</option>'}).join('');es.disabled=false;var c=DATA.clientes.find(function(x){return x.id===ci});if(c){$('vContato').value=c.nome||'';$('vFone').value=c.telefone||''}}
 function vEquipChanged(){var e=DATA.equipamentos.find(function(x){return x.id===$('vEquip').value});$('vSerie').value=e?e.serie:''}
 function calcHoras(){function t2(t){if(!t)return null;var p=t.split(':');return(+p[0])*60+(+p[1])}var st=t2($('vSaidaTesla').value),cc=t2($('vChegadaCliente').value),sc=t2($('vSaidaCliente').value),ct=t2($('vChegadaTesla').value);var serv=(sc!=null&&cc!=null&&sc>=cc)?(sc-cc):0;var desc=0;if(st!=null&&cc!=null&&cc>=st)desc+=cc-st;if(sc!=null&&ct!=null&&ct>=sc)desc+=ct-sc;$('vServicoHN').value=(serv/60).toFixed(1);$('vDeslocHN').value=(desc/60).toFixed(1)}
@@ -445,7 +519,7 @@ async function saveVisita(){
   var tipo='Manutenção';document.querySelectorAll('input[name=vTipo]').forEach(function(r){if(r.checked)tipo=r.value});
   var sigUrl=null;
   if(sigHas){toast('⏳ Enviando assinatura...');sigUrl=await uploadToImgBB(sigC.toDataURL('image/png').split(',')[1])}
-  var p={cliente_id:ci,equipamento_id:ei,tecnico:$('vTecnico').value||ME.email,tipo_chamada:tipo,contr_manut:$('vContrManut').value,falha:$('vFalha').value,servico:$('vServico').value,laudo:$('vLaudo').value,data:$('vData').value||null,saida_tesla:$('vSaidaTesla').value||null,chegada_cliente:$('vChegadaCliente').value||null,saida_cliente:$('vSaidaCliente').value||null,chegada_tesla:$('vChegadaTesla').value||null,km:$('vKm').value||null,servico_hn:$('vServicoHN').value||null,desloc_hn:$('vDeslocHN').value||null,obs:$('vObs').value,nome_extenso:$('vNomeExtenso').value,cargo:$('vCargo').value,assinatura_url:sigUrl};
+  var p={cliente_id:ci,equipamento_id:ei,tecnico:$('vTecnico').value||(PROFILE.nome||ME.email),tipo_chamada:tipo,contr_manut:$('vContrManut').value,falha:$('vFalha').value,servico:$('vServico').value,laudo:$('vLaudo').value,data:$('vData').value||null,saida_tesla:$('vSaidaTesla').value||null,chegada_cliente:$('vChegadaCliente').value||null,saida_cliente:$('vSaidaCliente').value||null,chegada_tesla:$('vChegadaTesla').value||null,km:$('vKm').value||null,servico_hn:$('vServicoHN').value||null,desloc_hn:$('vDeslocHN').value||null,obs:$('vObs').value,nome_extenso:$('vNomeExtenso').value,cargo:$('vCargo').value,assinatura_url:sigUrl};
   try{
     var res;
     if(curEditVisita)res=await sb.from('visitas').update(p).eq('id',curEditVisita);
@@ -457,7 +531,25 @@ async function saveVisita(){
     navigate('visitas');
   }catch(err){toast('❌ '+(err.message||err))}
 }
-async function delVisita(id){if(!confirm('Excluir?'))return;await sb.from('visitas').delete().eq('id',id);await loadAllData()}
+async function delVisita(id){if(!can('delete_visita')){toast('⛔ Apenas admin');return}if(!confirm('Excluir?'))return;await sb.from('visitas').delete().eq('id',id);await loadAllData()}
+
+// --- USERS (admin only) ---
+async function renderUsers(){
+  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}
+  // Busca dados atualizados de auth.users via admin (limitado)
+  $('tbUsers').innerHTML=DATA.profiles.map(function(p){
+    return '<tr><td>'+esc(p.login||'-')+'</td><td><span class="role-badge role-'+p.role+'">'+roleLabel(p.role)+'</span></td><td>'+(p.ativo?'✅ Ativo':'❌ Inativo')+'</td><td><button class="bw bsm" onclick="promoteUser(\''+p.id+'\')">👑 Admin</button> <button class="bi bsm" onclick="setRole(\''+p.id+'\',\'tecnico\')">🔧 Téc</button> <button class="bs bsm" onclick="setRole(\''+p.id+'\',\'visualizador\')">👁️ Vis</button></td></tr>';
+  }).join('')||'<tr><td colspan="4" class="mut">Carregando...</td></tr>';
+}
+async function setRole(id,role){
+  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}
+  var res=await sb.from('profiles').update({role:role}).eq('id',id);
+  if(res.error){toast('❌ '+res.error.message);return}
+  toast('✅ Perfil atualizado');
+  await loadAllData();
+  renderUsers();
+}
+async function promoteUser(id){await setRole(id,'admin')}
 
 // --- DASHBOARD & REPORTS ---
 function renderDash(){var os=DATA.os;$('dashCards').innerHTML=[['Clientes',DATA.clientes.length],['Equip.',DATA.equipamentos.length],['OS Abertas',os.filter(function(o){return o.status!=='Concluída'&&o.status!=='Cancelada'}).length],['Visitas',DATA.visitas.length],['Peças',DATA.pecas.length]].map(function(c){return'<div class="card"><div>'+c[0]+'</div><strong>'+c[1]+'</strong></div>'}).join('');$('dashOsList').innerHTML=os.length?'<div class="twrap"><table><thead><tr><th>OS</th><th>Cliente</th><th>Status</th></tr></thead><tbody>'+os.slice(0,5).map(function(o){var cl=DATA.clientes.find(function(c){return c.id===o.cliente_id});return'<tr class="crow" onclick="openOs(\''+o.id+'\')"><td>'+esc(o.numero)+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+badge(o.status)+'</td></tr>'}).join('')+'</tbody></table></div>':'<p class="mut">Nenhuma OS.</p>'}

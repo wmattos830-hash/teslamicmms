@@ -16,10 +16,9 @@
 .lcard input{margin-bottom:.75rem;width:100%;padding:.625rem;border:1px solid var(--bd);border-radius:6px;font:inherit}
 .lcard button{width:100%;margin-bottom:.5rem}
 .lerr{color:#dc2626;font-size:.85rem;display:none;background:#fef2f2;padding:.75rem;border-radius:6px;text-align:left}
-.role-badge{display:inline-block;padding:.25rem .75rem;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:.5rem}
-.role-admin{background:#ede9fe;color:#6d28d9}
-.role-tecnico{background:#dbeafe;color:#1e40af}
-.role-visualizador{background:#f3f4f6;color:#374151}
+.lok{color:#16a34a;font-size:.85rem;display:none;background:#dcfce7;padding:.75rem;border-radius:6px;text-align:left}
+.role-badge{display:inline-block;padding:.25rem .75rem;border-radius:999px;font-size:.75rem;font-weight:700}
+.role-admin{background:#ede9fe;color:#6d28d9}.role-tecnico{background:#dbeafe;color:#1e40af}.role-visualizador{background:#f3f4f6;color:#374151}
 .ctoggle{background:none;border:2px solid var(--p);color:var(--p);cursor:pointer;font-size:.9rem;padding:.5rem 1rem;border-radius:6px;font-weight:600;width:100%}
 #configPanel{display:none;text-align:left;margin-top:1rem;padding:1rem;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
 #configPanel.active{display:block}
@@ -77,6 +76,9 @@ th{background:#f9fafb;color:var(--mu)}
 .tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:.75rem 1.25rem;color:var(--mu);font-weight:600;cursor:pointer;white-space:nowrap}
 .tab-btn.active{color:var(--p);border-bottom-color:var(--p)}
 .tab-content{display:none}.tab-content.active{display:block}
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.5rem;margin-top:1rem}
+.perm-item{display:flex;align-items:center;gap:.5rem;padding:.6rem .75rem;background:var(--bg);border:1px solid var(--bd);border-radius:6px;font-size:.85rem;cursor:pointer}
+.perm-item input{width:auto}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.75rem;margin-top:1rem}
 .pcard{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--bd);aspect-ratio:1}
 .pcard img{width:100%;height:100%;object-fit:cover;cursor:pointer}
@@ -93,6 +95,7 @@ th{background:#f9fafb;color:var(--mu)}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .match{margin-top:.25rem;font-size:.8rem;color:#1e40af;background:#eff6ff;padding:.25rem .5rem;border-radius:4px;display:none}
 .match.visible{display:block}
+.act-cell{display:flex;flex-wrap:wrap;gap:.25rem}
 @media print{.sidebar,.mheader,.mnav,.drawer,.doverlay,.tabs,.pupload,.no-print,#loginScreen{display:none!important}.main-content{margin-left:0;padding:0}.view{display:none!important}#view-os-detail,#view-visita-form{display:block!important}input,select,textarea{border:none;padding:0;background:transparent}}
 </style>
 </head>
@@ -160,7 +163,41 @@ th{background:#f9fafb;color:var(--mu)}
 
 <section id="view-os-detail" class="view"><div class="fb no-print" style="margin-bottom:1rem"><button class="bs" onclick="navigate('os')">← Voltar</button><div><button class="bs" onclick="window.print()">🖨️ PDF</button> <button class="bd bsm" id="btnDelOs" onclick="delOsAtual()">Excluir</button></div></div><div class="panel"><div class="fb"><h2 id="detailOsNumero" style="margin:0;border:0;padding:0">OS</h2><span id="detailOsBadge" class="badge">Aberta</span></div><div class="fgrid" id="detailOsForm" style="margin-top:1rem"></div></div><div class="tabs no-print" id="osDetailTabs"></div><div id="tab-laudo" class="tab-content active panel"><h2>Laudo Técnico</h2><form id="formLaudo" class="fgrid"><div><label>Defeito Constatado</label><textarea name="constatado"></textarea></div><div><label>Causa</label><textarea name="causa"></textarea></div><div><label>Testes</label><textarea name="testes"></textarea></div><div><label>Serviços</label><textarea name="servicos"></textarea></div><div><label>Resultado</label><select name="resultado"><option value="">Pendente</option><option>Aprovado</option><option>Reprovado</option><option>Aguardando peça</option></select></div><div><button type="submit" class="bp">💾 Salvar Laudo</button></div></form></div><div id="tab-pecas-uso" class="tab-content panel"><h2>Peças Usadas</h2><form id="formAddPecaUso" class="fgrid" style="grid-template-columns:2fr 1fr auto;align-items:end"><div><label>Buscar Peça</label><input id="uPecaSearch" list="dlPecas" oninput="onPecaSearch(this,'uMatch')"><div id="uMatch" class="match"></div></div><div><label>Qtd</label><input type="number" id="uQtd" min="1" value="1"></div><div><button class="bg bsm" onclick="addPecaUso()">Registrar</button></div></form><div class="twrap"><table><thead><tr><th>Peça</th><th>Qtd</th><th></th></tr></thead><tbody id="tbPecasUso"></tbody></table></div></div><div id="tab-fotos" class="tab-content panel"><h2>Fotos</h2><div class="pgrid" id="photoGrid"><label class="pupload" id="photoUploadLabel"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><span style="font-size:2rem">📷</span><span style="font-size:.8rem">Adicionar</span></label></div></div><div id="tab-historico" class="tab-content panel"><h2>📜 Histórico</h2><div id="historicoTimeline"></div></div></section>
 
-<section id="view-users" class="view"><div class="panel"><h2>👥 Usuários</h2><p class="mut">Gerencie usuários em Supabase → Authentication → Users. Promova/demova via tabela <code>profiles</code>.</p><div class="twrap"><table><thead><tr><th>E-mail</th><th>Perfil</th><th>Ativo</th><th>Ações</th></tr></thead><tbody id="tbUsers"></tbody></table></div></div></section>
+<!-- USUÁRIOS -->
+<section id="view-users" class="view">
+<div class="panel"><h2>👥 Usuários & Perfis</h2>
+<p class="mut">Crie usuários, defina perfis e redefina senhas direto pelo sistema. <b>⚠️ Antes:</b> desligue "Confirm email" em Supabase → Authentication → Providers → Email.</p>
+<div class="stitle">➕ Criar Novo Usuário</div>
+<form id="formNewUser" class="fgrid">
+<div><label>E-mail *</label><input type="email" name="email" required placeholder="tecnico@empresa.com"></div>
+<div><label>Senha inicial *</label><input type="text" name="senha" required placeholder="mínimo 6 caracteres"></div>
+<div><label>Nome</label><input name="nome" placeholder="Nome do técnico"></div>
+<div><label>Perfil</label><select name="role"><option value="tecnico">🔧 Técnico</option><option value="visualizador">👁️ Visualizador</option><option value="admin">👑 Admin</option></select></div>
+<div style="display:flex;align-items:end"><button type="submit" class="bp" id="btnCreateUser">➕ Criar Usuário</button></div>
+</form>
+<div id="newUserMsg" class="lok" style="margin-top:.75rem"></div>
+</div>
+<div class="panel"><h2>Usuários Cadastrados</h2><div class="twrap"><table><thead><tr><th>E-mail</th><th>Nome</th><th>Perfil</th><th>Ativo</th><th>Ações</th></tr></thead><tbody id="tbUsers"></tbody></table></div></div>
+</section>
+
+<!-- MINHA SENHA -->
+<section id="view-minhasenha" class="view"><div class="panel"><h2>🔑 Minha Senha</h2>
+<p class="mut">Altere sua própria senha de acesso.</p>
+<form id="formMinhaSenha" class="fgrid" style="max-width:480px">
+<div><label>Senha atual *</label><input type="password" id="msAtual" required></div>
+<div><label>Nova senha *</label><input type="password" id="msNova" required placeholder="mínimo 6 caracteres"></div>
+<div><label>Confirmar nova senha *</label><input type="password" id="msConfirma" required></div>
+<div><button type="submit" class="bp">🔑 Trocar Senha</button></div>
+</form>
+<div id="msMsg" class="lok" style="margin-top:.75rem"></div>
+</div></section>
+
+<!-- PERMISSÕES -->
+<section id="view-perms" class="view"><div class="panel"><h2>🔒 Edição de Permissões</h2><p class="mut">Defina o que cada perfil pode fazer. <b>Admin</b> tem acesso total e não pode ser limitado.</p>
+<div class="fgrid" style="margin-bottom:1rem"><div><label>Editar perfil:</label><select id="permRole" onchange="renderPermGrid()"><option value="tecnico">🔧 Técnico</option><option value="visualizador">👁️ Visualizador</option></select></div></div>
+<div id="permGrid" class="perm-grid"></div>
+<div style="margin-top:1rem"><button class="bp" onclick="savePerms()">💾 Salvar Permissões</button> <button class="bs" onclick="resetPerms()">↩️ Restaurar Padrão</button></div>
+</div></section>
 
 </div>
 <nav class="mnav" id="mobileNav"></nav>
@@ -172,9 +209,9 @@ th{background:#f9fafb;color:var(--mu)}
 <div id="toast" class="toast" style="display:none"></div>
 
 <script>
-var K_CFG='cmms_cfg_v31';
+var K_CFG='cmms_cfg_v33';
 var CFG=JSON.parse(localStorage.getItem(K_CFG)||'{}');
-var sb=null,ME=null,PROFILE=null;
+var sb=null,sbAdmin=null,ME=null,PROFILE=null,PERMS=null;
 var DATA={clientes:[],equipamentos:[],pecas:[],os:[],visitas:[],profiles:[]};
 var curOs=null,curEditVisita=null,tmpPecas=[];
 
@@ -186,26 +223,12 @@ function fmtD(d){return d?new Date(d).toLocaleString('pt-BR'):'-'}
 function fmtDS(d){return d?new Date(d).toLocaleDateString('pt-BR'):'-'}
 
 // --- PERMISSÕES ---
-function can(action){
-  if(!PROFILE)return false;
-  if(PROFILE.role==='admin')return true;
-  var permissoes={
-    'tecnico':{
-      create:true,edit:true,delete:false,
-      create_os:true,edit_os:true,delete_os:false,
-      fill_laudo:true,add_peca_os:true,upload_foto:true,
-      create_visita:true,edit_visita:true,delete_visita:false
-    },
-    'visualizador':{
-      create:false,edit:false,delete:false,
-      create_os:false,edit_os:false,delete_os:false,
-      fill_laudo:false,add_peca_os:false,upload_foto:false,
-      create_visita:false,edit_visita:false,delete_visita:false
-    }
-  };
-  var p=permissoes[PROFILE.role]||{};
-  return p[action]||false;
-}
+var DEFAULT_PERMS={
+  tecnico:{create:true,edit:true,delete:false,create_os:true,edit_os:true,delete_os:false,fill_laudo:true,add_peca_os:true,upload_foto:true,create_visita:true,edit_visita:true,delete_visita:false},
+  visualizador:{create:false,edit:false,delete:false,create_os:false,edit_os:false,delete_os:false,fill_laudo:false,add_peca_os:false,upload_foto:false,create_visita:false,edit_visita:false,delete_visita:false}
+};
+var PERM_LABELS={create:'Criar Clientes / Equipamentos',edit:'Editar Clientes / Equipamentos',delete:'Excluir Clientes / Equipamentos',create_os:'Abrir OS',edit_os:'Editar OS (status/técnico)',delete_os:'Excluir OS',fill_laudo:'Preencher Laudo',add_peca_os:'Registrar Peças na OS',upload_foto:'Enviar Fotos',create_visita:'Criar Visita',edit_visita:'Editar Visita',delete_visita:'Excluir Visita'};
+function can(action){if(!PROFILE)return false;if(PROFILE.role==='admin')return true;var rp=(PERMS&&PERMS[PROFILE.role])||DEFAULT_PERMS[PROFILE.role]||{};return !!rp[action]}
 function roleLabel(r){return{admin:'👑 Admin',tecnico:'🔧 Técnico',visualizador:'👁️ Visualizador'}[r]||r}
 
 // --- CONFIG ---
@@ -213,123 +236,63 @@ window.onload=async function(){
   if(CFG.supabaseUrl && CFG.supabaseKey){
     try{
       sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey);
+      // Cliente separado que NÃO guarda sessão (pra criar usuários sem deslogar o admin)
+      sbAdmin=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:false,autoRefreshToken:false}});
       $('btnLogin').disabled=false;
-      // Tenta sessão salva
       var sess=await sb.auth.getSession();
-      if(sess.data.session){
-        $('loginEmail').value=sess.data.session.user.email;
-        $('loginStatus')&&($('loginStatus').textContent='✅ Sessão salva. Clique em Entrar.');
-      }
+      if(sess.data.session)$('loginEmail').value=sess.data.session.user.email;
     }catch(e){console.error(e)}
-  }else{
-    $('btnLogin').disabled=true;
-  }
+  }else{$('btnLogin').disabled=true}
   applyVisual();
 };
-
 function toggleConfig(){$('configPanel').classList.toggle('active');$('cfgSupabaseUrl').value=CFG.supabaseUrl||'';$('cfgSupabaseKey').value=CFG.supabaseKey||'';$('cfgImgbbKey').value=CFG.imgbbKey||'';$('cfgAppName').value=CFG.appName||'';$('logoStatus').textContent=CFG.logoUrl?'✅ Logo atual':''}
-
 async function saveConfig(){
-  CFG.supabaseUrl=$('cfgSupabaseUrl').value.trim();
-  CFG.supabaseKey=$('cfgSupabaseKey').value.trim();
-  CFG.imgbbKey=$('cfgImgbbKey').value.trim();
-  CFG.appName=$('cfgAppName').value.trim()||'CMMS Datadores';
+  CFG.supabaseUrl=$('cfgSupabaseUrl').value.trim();CFG.supabaseKey=$('cfgSupabaseKey').value.trim();CFG.imgbbKey=$('cfgImgbbKey').value.trim();CFG.appName=$('cfgAppName').value.trim()||'CMMS Datadores';
   var f=$('cfgLogoFile').files[0];
-  if(f && CFG.imgbbKey){
-    toast('⏳ Enviando logo...');
-    var url=await uploadToImgBB(f);
-    if(url){CFG.logoUrl=url;toast('✅ Logo enviada')}
-  }
-  localStorage.setItem(K_CFG,JSON.stringify(CFG));
-  location.reload();
+  if(f&&CFG.imgbbKey){toast('⏳ Enviando logo...');var url=await uploadToImgBB(f);if(url){CFG.logoUrl=url;toast('✅ Logo enviada')}}
+  localStorage.setItem(K_CFG,JSON.stringify(CFG));location.reload();
 }
-
-function exportConfig(){
-  var out={tipo:'cmms_config',appName:CFG.appName,supabaseUrl:CFG.supabaseUrl,supabaseKey:CFG.supabaseKey,imgbbKey:CFG.imgbbKey,logoUrl:CFG.logoUrl};
-  var b=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cmms-config.json';a.click();
-  toast('📤 Exportado');
-}
-function importConfig(inp){
-  var f=inp.files[0];if(!f)return;
-  var r=new FileReader();
-  r.onload=function(e){try{var d=JSON.parse(e.target.result);localStorage.setItem(K_CFG,JSON.stringify(d));location.reload()}catch(err){alert('Erro: '+err.message)}};
-  r.readAsText(f);
-}
-
-function applyVisual(){
-  var n=CFG.appName||'CMMS Datadores';
-  document.title=n;
-  ['loginAppName','sidebarAppName','mobileAppName'].forEach(id=>{var e=$(id);if(e)e.textContent=(id==='loginAppName'?'🔧 ':'')+n});
-  if(CFG.logoUrl){['loginLogo','sidebarLogo','mobileLogo'].forEach(id=>{var e=$(id);if(e){e.src=CFG.logoUrl;e.style.display='block'}})}
-}
+function exportConfig(){var out={tipo:'cmms_config',appName:CFG.appName,supabaseUrl:CFG.supabaseUrl,supabaseKey:CFG.supabaseKey,imgbbKey:CFG.imgbbKey,logoUrl:CFG.logoUrl};var b=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cmms-config.json';a.click();toast('📤 Exportado')}
+function importConfig(inp){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var d=JSON.parse(e.target.result);localStorage.setItem(K_CFG,JSON.stringify(d));location.reload()}catch(err){alert('Erro: '+err.message)}};r.readAsText(f)}
+function applyVisual(){var n=CFG.appName||'CMMS Datadores';document.title=n;['loginAppName','sidebarAppName','mobileAppName'].forEach(id=>{var e=$(id);if(e)e.textContent=(id==='loginAppName'?'🔧 ':'')+n});if(CFG.logoUrl){['loginLogo','sidebarLogo','mobileLogo'].forEach(id=>{var e=$(id);if(e){e.src=CFG.logoUrl;e.style.display='block'}})}}
 
 // --- AUTH ---
 async function doLogin(){
   var email=$('loginEmail').value.trim(),pass=$('loginPass').value;
   if(!email||!pass)return;
-  $('btnLogin').innerHTML='<span class="loader"></span> Entrando...';
-  $('loginError').style.display='none';
+  $('btnLogin').innerHTML='<span class="loader"></span> Entrando...';$('loginError').style.display='none';
   try{
     var res=await sb.auth.signInWithPassword({email:email,password:pass});
     if(res.error)throw res.error;
     ME=res.data.user;
-    
-    // Busca perfil na tabela profiles
     var profRes=await sb.from('profiles').select('*').eq('id',ME.id).maybeSingle();
-    if(profRes.error){
-      throw new Error('Erro ao buscar perfil: '+profRes.error.message+'. Rode o SQL de criação de perfil.');
-    }
-    if(!profRes.data){
-      throw new Error('Perfil não encontrado. Rode o SQL para criar seu perfil de admin.');
-    }
+    if(profRes.error)throw new Error('Erro ao buscar perfil: '+profRes.error.message);
+    if(!profRes.data)throw new Error('Perfil não encontrado. Rode o SQL de setup.');
     PROFILE=profRes.data;
-    if(!PROFILE.ativo){
-      await sb.auth.signOut();
-      throw new Error('Usuário inativo. Contate o administrador.');
-    }
-    
-    $('loginScreen').classList.add('hidden');
-    $('appShell').style.display='block';
-    
-    // Mostra usuário e perfil no sidebar
+    if(!PROFILE.ativo){await sb.auth.signOut();throw new Error('Usuário inativo.')}
+    var cfgRes=await sb.from('config').select('*').eq('id',1).maybeSingle();
+    PERMS=(cfgRes.data&&cfgRes.data.data&&cfgRes.data.data.permissoes)||DEFAULT_PERMS;
+    $('loginScreen').classList.add('hidden');$('appShell').style.display='block';
     $('sidebarUserName').textContent=PROFILE.nome||ME.email;
     $('sidebarUserRole').innerHTML='<span class="role-badge role-'+PROFILE.role+'">'+roleLabel(PROFILE.role)+'</span>';
-    
-    buildNavs();
-    await loadAllData();
+    buildNavs();await loadAllData();
     if(DATA.pecas.length===0){toast('⏳ Carregando catálogo...');await loadDefaultCatalog()}
     navigate('dashboard');
     toast('☁️ Conectado como '+roleLabel(PROFILE.role));
   }catch(e){
-    $('btnLogin').textContent='Entrar';
-    $('loginError').textContent='❌ '+(e.message||e);
-    $('loginError').style.display='block';
+    $('btnLogin').textContent='Entrar';$('loginError').textContent='❌ '+(e.message||e);$('loginError').style.display='block';
   }
 }
 function doLogout(){sb.auth.signOut();location.reload()}
 
 // --- IMGBB ---
-async function uploadToImgBB(data){
-  if(!CFG.imgbbKey)return null;
-  try{
-    var fd=new FormData();
-    if(typeof data==='string')fd.append("image",data);
-    else fd.append("image",data);
-    var res=await fetch("https://api.imgbb.com/1/upload?key="+CFG.imgbbKey,{method:"POST",body:fd});
-    var json=await res.json();
-    if(json.success)return json.data.url;
-    return null;
-  }catch(e){return null}
-}
+async function uploadToImgBB(data){if(!CFG.imgbbKey)return null;try{var fd=new FormData();fd.append("image",data);var res=await fetch("https://api.imgbb.com/1/upload?key="+CFG.imgbbKey,{method:"POST",body:fd});var json=await res.json();if(json.success)return json.data.url;return null}catch(e){return null}}
 
 // --- DATA ---
 async function loadAllData(){
   try{
     var [c,e,p,o,v,u]=await Promise.all([
-      sb.from('clientes').select('*'),
-      sb.from('equipamentos').select('*'),
-      sb.from('pecas').select('*'),
+      sb.from('clientes').select('*'),sb.from('equipamentos').select('*'),sb.from('pecas').select('*'),
       sb.from('ordens_servico').select('*').order('data_abertura',{ascending:false}),
       sb.from('visitas').select('*').order('criado_em',{ascending:false}),
       sb.from('profiles').select('*')
@@ -341,53 +304,140 @@ async function loadAllData(){
 
 // --- CATÁLOGO ---
 var DEFAULT_CATALOG=[["1012","A22002","Tampa Superior da impressora","Estrutura","Série 8"],["702","29-0002-04","Membrana da Tela Série 8","Estrutura","Série 8"],["-","A22005","Tampa inferior da impressora","Estrutura","Série 8"],["-","28-0047-01","Parafuso da Porta de Serviços Hidráulicos Série 8","Estrutura","Série 8"],["-","A22003","Carcaça Cabeça de Impressão","Estrutura","Série 8"],["-","25-0004-06","Porta de Serviços Hidráulicos Série 8","Estrutura","Série 8"],["-","A21005","Carcaça Interna Cabeça de Impressão","Estrutura","Série 8"],["1033","27-0005-04W","Tampa do Copo de Diluente Série 8","Estrutura","Série 8"],["-","A22004","Placa Guia/Proteção","Estrutura","Série 8"],["1032","27-0005-04B","Tampa do Copo de Tinta Série 8","Estrutura","Série 8"],["672","F22001","Membrana","Estrutura","Série 8"],["-","B22002","Placa Controladora CPU","Eletrônica","Série 8"],["386","13-9004-01","Bateria RTC Placa Principal","Eletrônica","Série 8"],["-","B21002","Placa de Comunicação","Eletrônica","Série 8"],["760","19-0101-01","PCI, CPU 81","Eletrônica","BestCode 81"],["-","B21001","Placa da Cabeçote de Impressão","Eletrônica","Série 8"],["620","19-0093-01","PCI, CPU 82","Eletrônica","BestCode 82"],["-","B22001","Placa de tela (LCD28_BK)","Eletrônica","Série 8"],["494","19-0094-01","PCI, CPU 86","Eletrônica","BestCode 86"],["-","E22001","Display de 2,8\"","Eletrônica","Série 8"],["429","19-0102-01","PCI, CPU 87","Eletrônica","BestCode 87"],["-","FSP040-RHAN2","Fonte de Alimentação","Eletrônica","Série 8"],["619","19-0095-01","PCI, CPU 88","Eletrônica","BestCode 88"],["-","IC-MLC05-40","Cabo Flat 40 vias","Eletrônica","Série 8"],["-","19-0096-01","PCI, CPU 88 High Speed","Eletrônica","BestCode 88"],["-","IC-MLC05-20","Cabo Flat 20 vias","Eletrônica","Série 8"],["-","19-0097-01","PCI, CPU 88 Opaque","Eletrônica","BestCode 88"],["-","-","Alça de Travamento (Alavanca)","Eletrônica","Série 8"],["-","19-0098-01","PCI, CPU 88 Food Grade","Eletrônica","BestCode 88"],["1253","PAS-288-M875","Bloco de Cruzamento","Eletrônica","Série 8"],["-","19-0099-01","PCI, CPU 88 Micro","Eletrônica","BestCode 88"],["-","19-0100-01","PCI, CPU 88 High Speed One","Eletrônica","BestCode 88"],["309","18-0001-03","Fonte de Alimentação Série 8","Eletrônica","Série 8"],["967","20-5015-01","Display LCD Touch Screen 10.4\" Série 8 2020 (Não inclui placa PCB)","Eletrônica","Série 8 2020"],["995","19-0023-01","Placa PCB do Display Série 8 2020","Eletrônica","Série 8 2020"],["-","16-0032-01","Cabo Flat do Display Série 8","Eletrônica","Série 8"],["568","18-0002-01","Ventilador Série 8","Eletrônica","Série 8"],["495","32-0001-01","Bomba de Tinta Fluid-o-Tech Série 8","Eletrohidráulica","Série 8"],["-","32-5005-01","Bomba de Tinta Diener Série 8","Eletrohidráulica","Série 8"],["950","32-0003-01","Bomba de Tinta Micropump Opaque Série 8","Eletrohidráulica","Série 8"],["951","33-0001-01","Válvula 2 vias Série 8","Eletrohidráulica","Série 8"],["-","21-0008-01","O'ring da Válvula 2 vias Série 8","Eletrohidráulica","Série 8"],["-","16-0018-08","Chicote das Válvulas Série 8","Eletrohidráulica","Série 8"],["893","34-0003-02","Transdutor de Pressão Série 8","Eletrohidráulica","Série 8"],["703","20-0015-01","Viscosímetro Série 8","Eletrohidráulica","Série 8"],["339","34-0001-05","Sensor de Nível de Tinta Série 8","Eletrohidráulica","Série 8"],["497","34-0002-03","Sensor de Nível de Diluente Série 8","Eletrohidráulica","Série 8"],["578","20-0024-01","Copo de Abastecimento Smartfill Tinta Série 8","Eletrohidráulica","Série 8"],["665","20-0025-01","Copo de Abastecimento Smartfill Diluente Série 8","Eletrohidráulica","Série 8"],["876","20-0031-01","Leitor SmartFilter Série 8","Eletrohidráulica","Série 8"],["952","20-0012-01","Reservatório de Tinta Série 8","Hidráulico","Série 8"],["953","20-0013-01","Reservatório de Diluente Série 8","Hidráulico","Série 8"],["1038","20-5011-01","Venturi 40PSI GEN1 Série 8","Hidráulico","Série 8"],["966","20-5032-01","Venturi 40PSI GEN2 Série Next 8","Hidráulico","Next 8"],["-","23-0034-01","Tubo de Retorno do Venturi Série 8","Hidráulico","Série 8"],["-","27-0022-05","Tubo Pescador de Tinta Série 8","Hidráulico","Série 8"],["-","27-0024-01","Tubo de Retorno do Viscosímetro Série 8","Hidráulico","Série 8"],["-","27-0023-01","Tubo Pescador de Diluente Série 8","Hidráulico","Série 8"],["965","20-0040-01","Damper Série 8","Hidráulico","Série 8"],["-","20-0039-01","Bloco de Válvulas GEN1 Série 8","Hidráulico","Série 8"],["-","20-0040-01","Bloco de Válvulas GEN2 Série Next 8","Hidráulico","Next 8"],["164","31-5055-02","Kit de Filtros 81 2.000h Série 8","Filtros","BestCode 81"],["333","31-5053-02","Kit de Filtros 82/86/87/88 2.000h Série 8","Filtros","BestCode 82/86/87/88"],["334","31-5051-02","Kit de Filtros 82/86/87/88 5.000h Série 8","Filtros","BestCode 82/86/87/88"],["335","31-5050-02","Kit de Filtros 88 10.000h Série 8","Filtros","BestCode 88"],["336","31-5054-01","Kit de Filtros 88S Opaque 2.000h Série 8","Filtros","BestCode 88S"],["1014","31-0023-01","Filtro Pré-Bomba Série 8","Filtros","Série 8"],["-","31-0021-01","Filtro de Diluente Série 8","Filtros","Série 8"],["-","20-0019-01","Filtro Pré-Cabeça Série 8","Filtros","Série 8"],["761","46-5004-01","Suporte do Filtro de Ar Série 8","Filtros","Série 8"],["577","46-0004-01","Filtro de Ar Série 8","Filtros","Série 8"],["-","-","Mangueira do Gerador de Gotas Série 8","Cabeçote/Umbilical","Série 8"],["-","25-0001-12","Suporte do Gerador de Gotas Série 8","Cabeçote/Umbilical","Série 8"],["466","20-5008-02","Gerador de Gotas 65µm Série 8","Cabeçote/Umbilical","Série 8"],["700","20-0023-01","Gerador de Gotas 75µm Série 8","Cabeçote/Umbilical","Série 8"],["845","22-0029-01","Bico 65µm Série 8","Cabeçote/Umbilical","Série 8"],["954","22-0030-01","Bico 75µm Série 8","Cabeçote/Umbilical","Série 8"],["1232","21-0001-08","O'ring do bico Série 8","Cabeçote/Umbilical","Série 8"],["701","20-0016-02","Umbilical Completo GEN1 Série 8","Cabeçote/Umbilical","Série 8"],["701","20-0033-03","Umbilical Completo GEN2 Série Next 8","Cabeçote/Umbilical","Next 8"],["997","33-0002-01","Válvula do Cabeçote 3 vias Série 8","Cabeçote/Umbilical","Série 8"],["-","20-0037-01","Bloco da Válvula do Cabeçote GEN1 Série 8","Cabeçote/Umbilical","Série 8"],["749","20-0038-01","Bloco da Válvula do Cabeçote GEN2 Série Next 8","Cabeçote/Umbilical","Next 8"],["1022","20-0041-01","Sensor de Temperatura do Cabeçote GEN1/GEN2","Cabeçote/Umbilical","Série 8/Next 8"],["445","22-0083-01","Sensor de Tubo de Retorno Série 8","Cabeçote/Umbilical","Série 8"],["338","22-0010-13","Tubo de Retorno Série 8 (Inclui nova chapa de suporte)","Cabeçote/Umbilical","Série 8"],["608","16-0023-02","Cabo Coaxial 3 metros Série 8","Cabeçote/Umbilical","Série 8"],["-","22-0038-04","Capa Traseira do Cabeçote Série 8","Cabeçote/Umbilical","Série 8"],["843","22-0039-04","Capa Frontal do Cabeçote Série 8","Cabeçote/Umbilical","Série 8"],["-","22-0015-05","Parafuso da Capa do Cabeçote Série 8","Cabeçote/Umbilical","Série 8"],["337","22-0012-04","Eletrodo de Carga Série 8","Cabeçote/Umbilical","Série 8"],["1247","22-0003-05","Cam de Alinhamento Série 8","Cabeçote/Umbilical","Série 8"],["1009","20-5022-01","Travas de Alinhamento Série 8","Cabeçote/Umbilical","Série 8"],["400","32-0005-01","Bomba de Ar Positivo Série 8","Periféricos e Opcionais","Série 8"],["761","31-5075-01","Kit Ar Limpo Série 8","Periféricos e Opcionais","Série 8"],["827","-","Chicote para Sensor Série 8","Periféricos e Opcionais","Série 8"],["828","-","Chicote para Encoder Série 8","Periféricos e Opcionais","Série 8"],["-","-","Chicote para Alerta Luminoso Série 8","Periféricos e Opcionais","Série 8"],["-","-","Chicote para Intertravamento Série 8","Periféricos e Opcionais","Série 8"],["252","-","Sensor Fotoelétrico BR400","Acessórios","Universal"],["998","-","Sensor de Barreira BRP3M-MDT","Acessórios","Universal"],["234","-","Sensor de Fibra Ótica BF3AX","Acessórios","Universal"],["346","-","Sensor Indutivo","Acessórios","Universal"],["1248","-","Encoder 300dpi","Acessórios","Universal"],["315","-","Alerta Luminoso LED com Buzzer","Acessórios","Universal"],["271","-","Alerta Luminoso LED sem Buzzer","Acessórios","Universal"],["316","-","Alerta Luminoso Lâmpada com Buzzer","Acessórios","Universal"],["472","-","Alerta Luminoso Lâmpada sem Buzzer","Acessórios","Universal"],["249","-","Cabo de Alimentação 2P+T Padrão BR","Acessórios","Universal"],["254","-","Pedestal de Aço Inox","Acessórios","Universal"],["489","-","Pisseta Graduada 500ml","Acessórios","Universal"],["123","51-0081-01","Tinta Preta, FastDry 81","Consumíveis","BestCode 81"],["63","51-0001-01","Tinta Preta, MEK","Consumíveis","Série 8"],["93","51-0005-01","Tinta Amarela, MEK Baixo Pigmento","Consumíveis","Série 8"],["912","51-0056-01","Tinta Amarela, Acetona Baixo Pigmento","Consumíveis","Série 8"],["913","51-0007-01","Tinta Preta, Flex Plus","Consumíveis","Série 8"],["717","51-0013-01","Tinta Preta, Acetona/Etanol","Consumíveis","Série 8"],["718","51-0026-01","Tinta Preta, Super Flex","Consumíveis","Série 8"],["94","51-0027-01","Tinta Preta, MEK Flex","Consumíveis","Série 8"],["97","51-0032-01","Tinta Preta, Resistente à Álcool","Consumíveis","Série 8"],["964","51-0061-01","Tinta Preta, MEK Plástica","Consumíveis","Série 8"],["175","51-0024-01","Tinta Branca, MEK Opaque","Consumíveis","Série 8"],["1270","51-0006-01","Tinta Branca, Acetona Opaque","Consumíveis","Série 8"],["824","51-0015-01","Tinta Vermelha, Food Grade","Consumíveis","Série 8"],["99","52-0081-01","Diluente, FastDry Black","Consumíveis","BestCode 81"],["120","52-0001-01","Diluente, MEK","Consumíveis","Série 8"],["914","52-0002-01","Diluente, Acetona","Consumíveis","Série 8"],["98","52-0007-01","Diluente, Flex","Consumíveis","Série 8"],["825","52-0015-01","Diluente, Food Grade Red","Consumíveis","Série 8"],["721","52-0026-01","Diluente, Super Flex","Consumíveis","Série 8"],["719","52-0027-01","Diluente, Acetona/Etanol","Consumíveis","Série 8"],["122","52-0032-01","Diluente, Resistente à Álcool","Consumíveis","Série 8"],["948","50-0001-01","Solução de Limpeza, MEK","Consumíveis","Série 8"],["199","-","Solução de Limpeza, Livre de MEK","Consumíveis","Série 8"],["975","50-0026-01","Solução de Limpeza, Super Flex","Consumíveis","Série 8"],["963","K934","Cartucho de Tinta Preta K934 Solvente","Consumíveis","DotJet/Famjet"],["962","K710","Cartucho de Tinta Preta K710 Água","Consumíveis","DotJet/Famjet"],["1226","K710 Bulk","Bulk de Tinta Preta K710 Água","Consumíveis","DotJet/Famjet"],["971","W937","Cartucho de Tinta Branca W937","Consumíveis","DotJet/Famjet"],["-","DK001","Controlador","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK53","Placa Port","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK51","Placa CPU (CubieBoard)","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK52","Placa Base","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK54","Display LCD + Touchscreen","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK002","Cabeçote de Impressão","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK008","Cabo PEN (Cabeçote-Controlador)","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK55","Fonte de Alimentação","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK19","Encoder 1200ppr + polia 64mm","Peças Famjet TL300DK","Famjet TL300DK"],["-","DK033","Conector externo para sensor e encoder","Peças Famjet TL300DK","Famjet TL300DK"]];
-
-async function loadDefaultCatalog(){
-  var rows=DEFAULT_CATALOG.map(function(r){return{ref:r[0]==='-'?null:r[0],codigo:r[1]==='-'?null:r[1],descricao:r[2],categoria:r[3],compativel:r[4]}});
-  try{
-    var res=await sb.from('pecas').insert(rows);
-    if(!res.error){await loadAllData();toast('✅ '+rows.length+' peças carregadas')}
-    else toast('⚠️ '+res.error.message);
-  }catch(e){console.error(e)}
-}
+async function loadDefaultCatalog(){var rows=DEFAULT_CATALOG.map(function(r){return{ref:r[0]==='-'?null:r[0],codigo:r[1]==='-'?null:r[1],descricao:r[2],categoria:r[3],compativel:r[4]}});try{var res=await sb.from('pecas').insert(rows);if(!res.error){await loadAllData();toast('✅ '+rows.length+' peças carregadas')}else toast('⚠️ '+res.error.message)}catch(e){console.error(e)}}
 
 // --- NAV ---
-function getMenuItems(){
-  var items=[['dashboard','📊','Dash',1],['os','🔧','OS',1],['visitas','🚗','Visitas',1],['clientes','👥','Clientes',0],['equipamentos','🖥️','Equip.',0],['pecas','🔩','Peças',0],['reports','📊','Relatórios',0]];
-  if(PROFILE && PROFILE.role==='admin'){items.push(['users','👥','Usuários',0])}
-  return items;
-}
-function buildNavs(){var items=getMenuItems();var s='',m='',d='';items.forEach(function(it){s+='<button class="sitem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)">'+it[1]+' '+it[2]+'</button>';if(it[3])m+='<button class="mbtn" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)"><span class="icon">'+it[1]+'</span>'+it[2]+'</button>';else d+='<button class="ditem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\');toggleDrawer()">'+it[1]+' '+it[2]+'</button>'});
-m+='<button class="mbtn" onclick="toggleDrawer()"><span class="icon">☰</span>Mais</button>';$('sidebarNav').innerHTML=s;$('mobileNav').innerHTML=m;$('drawerItems').innerHTML=d}
-function navigate(v,btn){var map={dashboard:'view-dashboard',visitas:'view-visitas','visita-form':'view-visita-form',reports:'view-reports',clientes:'view-clientes','cliente-historico':'view-cliente-historico',equipamentos:'view-equipamentos',pecas:'view-pecas',os:'view-os','os-detail':'view-os-detail',users:'view-users'};document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});var t=$(map[v]);if(t)t.classList.add('active');document.querySelectorAll('[data-nav]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-nav')===v)});refresh(v)}
-function refresh(v){if(v==='dashboard')renderDash();else if(v==='visitas')renderVisitas();else if(v==='reports')applyFilters();else if(v==='clientes')renderCli();else if(v==='equipamentos')renderEq();else if(v==='pecas')renderPc();else if(v==='os')renderOs();else if(v==='users')renderUsers()}
+function getMenuItems(){var items=[['dashboard','📊','Dash',1],['os','🔧','OS',1],['visitas','🚗','Visitas',1],['clientes','👥','Clientes',0],['equipamentos','🖥️','Equip.',0],['pecas','🔩','Peças',0],['reports','📊','Relatórios',0],['minhasenha','🔑','Minha Senha',0]];if(PROFILE&&PROFILE.role==='admin'){items.push(['users','👥','Usuários',0]);items.push(['perms','🔒','Permissões',0])}return items}
+function buildNavs(){var items=getMenuItems();var s='',m='',d='';items.forEach(function(it){s+='<button class="sitem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)">'+it[1]+' '+it[2]+'</button>';if(it[3])m+='<button class="mbtn" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\',this)"><span class="icon">'+it[1]+'</span>'+it[2]+'</button>';else d+='<button class="ditem" data-nav="'+it[0]+'" onclick="navigate(\''+it[0]+'\');toggleDrawer()">'+it[1]+' '+it[2]+'</button>'});m+='<button class="mbtn" onclick="toggleDrawer()"><span class="icon">☰</span>Mais</button>';$('sidebarNav').innerHTML=s;$('mobileNav').innerHTML=m;$('drawerItems').innerHTML=d}
+function navigate(v,btn){var map={dashboard:'view-dashboard',visitas:'view-visitas','visita-form':'view-visita-form',reports:'view-reports',clientes:'view-clientes','cliente-historico':'view-cliente-historico',equipamentos:'view-equipamentos',pecas:'view-pecas',os:'view-os','os-detail':'view-os-detail',users:'view-users',perms:'view-perms',minhasenha:'view-minhasenha'};document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});var t=$(map[v]);if(t)t.classList.add('active');document.querySelectorAll('[data-nav]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-nav')===v)});refresh(v)}
+function refresh(v){if(v==='dashboard')renderDash();else if(v==='visitas')renderVisitas();else if(v==='reports')applyFilters();else if(v==='clientes')renderCli();else if(v==='equipamentos')renderEq();else if(v==='pecas')renderPc();else if(v==='os')renderOs();else if(v==='users')renderUsers();else if(v==='perms')renderPermGrid()}
 function toggleDrawer(){$('drawer').classList.toggle('active');$('drawerOverlay').classList.toggle('active')}
 function badge(s){var m={'Aberta':'badge-open','Concluída':'badge-done','Aguardando peça':'badge-wait','Em análise':'badge-prog','Em manutenção':'badge-prog','Em teste':'badge-prog','Cancelada':'badge-wait'};return'<span class="badge '+(m[s]||'badge-open')+'">'+esc(s)+'</span>'}
 function rebuildDatalist(){$('dlPecas').innerHTML=DATA.pecas.map(function(p){return'<option value="'+esc(p.codigo||'')+'">'+esc((p.ref?p.ref+' | ':'')+(p.codigo||'')+' - '+p.descricao)+'</option>'}).join('')}
 function findPiece(t){if(!t)return null;t=t.trim().toLowerCase();var P=DATA.pecas,i;for(i=0;i<P.length;i++){if((P[i].codigo||'').toLowerCase()===t)return P[i]}for(i=0;i<P.length;i++){if((P[i].ref||'').toLowerCase()===t)return P[i]}for(i=0;i<P.length;i++){if((P[i].codigo||'').toLowerCase().indexOf(t)>=0)return P[i]}for(i=0;i<P.length;i++){if((P[i].ref||'').toLowerCase().indexOf(t)>=0)return P[i]}for(i=0;i<P.length;i++){if(P[i].descricao.toLowerCase().indexOf(t)>=0)return P[i]}return null}
 function onPecaSearch(inp,mid){var d=$(mid);var p=findPiece(inp.value);if(p){d.textContent='✅ '+(p.ref?p.ref+' | ':'')+p.codigo+' — '+p.descricao;d.classList.add('visible');d.setAttribute('data-id',p.id)}else{d.textContent=inp.value.trim()?'❌ Não encontrada':'';d.classList.toggle('visible',!!inp.value.trim());d.removeAttribute('data-id')}}
 
+// --- PERMISSÕES ---
+function renderPermGrid(){if(!PROFILE||PROFILE.role!=='admin'){$('permGrid').innerHTML='<p class="mut">⛔ Apenas o admin pode editar permissões.</p>';return}var role=$('permRole').value;var rp=(PERMS&&PERMS[role])||DEFAULT_PERMS[role]||{};var html='';for(var key in PERM_LABELS){html+='<label class="perm-item"><input type="checkbox" data-perm="'+key+'" '+(rp[key]?'checked':'')+'><span>'+PERM_LABELS[key]+'</span></label>'}$('permGrid').innerHTML=html}
+async function savePerms(){if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}var role=$('permRole').value;var rp={};document.querySelectorAll('#permGrid input[data-perm]').forEach(function(cb){rp[cb.getAttribute('data-perm')]=cb.checked});if(!PERMS)PERMS={tecnico:{},visualizador:{}};PERMS[role]=rp;var cur=await sb.from('config').select('*').eq('id',1).maybeSingle();var data=(cur&&cur.data&&cur.data.data)||{};data.permissoes=PERMS;var res=await sb.from('config').update({data:data}).eq('id',1);if(res.error){res=await sb.from('config').insert({id:1,data:data});if(res.error){toast('❌ '+res.error.message);return}}toast('✅ Permissões de "'+roleLabel(role)+'" salvas!')}
+function resetPerms(){PERMS=JSON.parse(JSON.stringify(DEFAULT_PERMS));renderPermGrid();toast('↩️ Padrão restaurado (clique Salvar para confirmar)')}
+
+// --- USUÁRIOS: CRIAR / PERFIL / SENHA / EXCLUIR ---
+async function renderUsers(){
+  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}
+  $('tbUsers').innerHTML=DATA.profiles.map(function(p){
+    var isSelf=p.id===ME.id;
+    return '<tr><td>'+esc(p.login||'-')+'</td><td>'+esc(p.nome||'-')+'</td><td><span class="role-badge role-'+p.role+'">'+roleLabel(p.role)+'</span></td><td>'+(p.ativo?'✅':'❌')+'</td>'+
+      '<td class="act-cell">'+
+        '<button class="bw bsm" onclick="setRole(\''+p.id+'\',\'admin\')">👑</button>'+
+        '<button class="bi bsm" onclick="setRole(\''+p.id+'\',\'tecnico\')">🔧</button>'+
+        '<button class="bs bsm" onclick="setRole(\''+p.id+'\',\'visualizador\')">👁️</button>'+
+        '<button class="bg bsm" onclick="askResetPwd(\''+p.id+'\',\''+esc(p.login||'').replace(/'/g,"\\'")+'\')">🔑</button>'+
+        (isSelf?'':('<button class="bd bsm" onclick="delUser(\''+p.id+'\')">✕</button>'))+
+      '</td></tr>';
+  }).join('')||'<tr><td colspan="5" class="mut">Nenhum usuário.</td></tr>';
+}
+async function setRole(id,role){if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}var res=await sb.from('profiles').update({role:role}).eq('id',id);if(res.error){toast('❌ '+res.error.message);return}toast('✅ Perfil atualizado');await loadAllData();renderUsers()}
+async function askResetPwd(id,email){
+  var np=prompt('Nova senha para '+email+' (mínimo 6 caracteres):');
+  if(np===null)return;
+  if(np.length<6){alert('A senha precisa ter pelo menos 6 caracteres.');return}
+  await resetUserPwd(id,np);
+}
+async function resetUserPwd(id,newPass){
+  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}
+  try{
+    // Atualiza a senha do usuário via cliente que não persiste sessão
+    var res=await sbAdmin.auth.admin.updateUserById(id,{password:newPass});
+    if(res.error)throw res.error;
+    toast('✅ Senha redefinida!');
+  }catch(e){
+    // Fallback: se admin.updateUserById falhar (anon sem permissão), tenta via signUp flow não é possível.
+    toast('❌ '+e.message+' — Dica: use a chave service_role num Edge Function, ou redefina no painel do Supabase.');
+  }
+}
+async function delUser(id){
+  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}
+  if(id===ME.id){alert('Você não pode excluir a si mesmo.');return}
+  if(!confirm('Excluir este usuário? (remove o login e o perfil)'))return;
+  try{
+    var r1=await sbAdmin.auth.admin.deleteUser(id);
+    if(r1.error)throw r1.error;
+    toast('✅ Usuário excluído');
+    await loadAllData();renderUsers();
+  }catch(e){
+    // Se não conseguir deletar o auth user, pelo menos remove o profile
+    await sb.from('profiles').delete().eq('id',id);
+    toast('⚠️ Perfil removido. Login no Supabase: '+e.message);
+    await loadAllData();renderUsers();
+  }
+}
+
+// CRIAR USUÁRIO (signUp sem afetar sessão do admin)
+document.getElementById('formNewUser').addEventListener('submit',async function(e){
+  e.preventDefault();
+  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}
+  var f=this;
+  var email=f.email.value.trim(),senha=f.senha.value,nome=f.nome.value.trim(),role=f.role.value;
+  var msg=$('newUserMsg');msg.style.display='none';
+  if(!email||!senha){alert('Preencha e-mail e senha.');return}
+  if(senha.length<6){alert('A senha precisa ter pelo menos 6 caracteres.');return}
+  $('btnCreateUser').innerHTML='<span class="loader"></span> Criando...';$('btnCreateUser').disabled=true;
+  try{
+    // signUp no cliente que NÃO persiste sessão -> não desloga o admin
+    var res=await sbAdmin.auth.signUp({email:email,password:senha,options:{data:{nome:nome}}});
+    if(res.error)throw res.error;
+    var newUser=res.data.user;
+    if(!newUser)throw new Error('Usuário não criado. Verifique se "Confirm email" está desligado no Supabase.');
+    // Cria o perfil com o papel escolhido
+    var pres=await sb.from('profiles').insert({id:newUser.id,nome:nome||email,login:email,role:role,ativo:true});
+    if(pres.error)throw pres.error;
+    msg.textContent='✅ Usuário '+email+' criado com perfil '+roleLabel(role)+'!';msg.style.display='block';
+    f.reset();
+    await loadAllData();renderUsers();
+  }catch(err){
+    msg.style.display='none';
+    alert('❌ '+err.message);
+  }finally{
+    $('btnCreateUser').innerHTML='➕ Criar Usuário';$('btnCreateUser').disabled=false;
+  }
+});
+
+// --- MINHA SENHA (qualquer usuário) ---
+document.getElementById('formMinhaSenha').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var atual=$('msAtual').value,nova=$('msNova').value,conf=$('msConfirma').value;
+  var msg=$('msMsg');msg.style.display='none';
+  if(nova.length<6){msg.textContent='❌ A nova senha precisa ter pelo menos 6 caracteres.';msg.style.display='block';msg.style.background='#fef2f2';msg.style.color='#dc2626';return}
+  if(nova!==conf){msg.textContent='❌ As novas senhas não conferem.';msg.style.display='block';msg.style.background='#fef2f2';msg.style.color='#dc2626';return}
+  try{
+    // Reautentica pra confirmar a senha atual
+    var r1=await sb.auth.signInWithPassword({email:ME.email,password:atual});
+    if(r1.error)throw new Error('Senha atual incorreta.');
+    // Atualiza pra nova senha
+    var r2=await sb.auth.updateUser({password:nova});
+    if(r2.error)throw r2.error;
+    msg.textContent='✅ Senha alterada com sucesso!';msg.style.display='block';msg.style.background='#dcfce7';msg.style.color='#16a34a';
+    this.reset();
+  }catch(err){
+    msg.textContent='❌ '+err.message;msg.style.display='block';msg.style.background='#fef2f2';msg.style.color='#dc2626';
+  }
+});
+
 // --- CLIENTES ---
 async function renderCli(){$('selEquipCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');$('panelClienteForm').style.display=can('create')?'':'none';$('tbClientes').innerHTML=DATA.clientes.map(function(c){var a='<button class="bi bsm" onclick="openHist(\''+c.id+'\')">📋</button>';if(can('edit'))a+=' <button class="bw bsm" onclick="editCli(\''+c.id+'\')">✏️</button>';if(can('delete'))a+=' <button class="bd bsm" onclick="delCli(\''+c.id+'\')">✕</button>';return'<tr><td>'+esc(c.nome)+'</td><td>'+esc(c.tipo)+'</td><td>'+esc(c.telefone||'-')+'</td><td>'+a+'</td></tr>'}).join('')||'<tr><td colspan="4" class="mut">Nenhum.</td></tr>'}
 function resetFormCli(){$('formCliente').reset();$('formCliente').editId.value='';$('btnCancelCli').style.display='none';$('clientePanelTitle').textContent='➕ Novo Cliente'}
 function editCli(id){if(!can('edit'))return;var c=DATA.clientes.find(function(x){return x.id===id});if(!c)return;var f=$('formCliente');f.nome.value=c.nome;f.tipo.value=c.tipo;f.telefone.value=c.telefone||'';f.email.value=c.email||'';f.obs.value=c.obs||'';f.editId.value=id;$('clientePanelTitle').textContent='✏️ Editar';$('btnCancelCli').style.display=''}
-document.getElementById('formCliente').addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(this);var eid=fd.get('editId');var p={nome:fd.get('nome').trim(),tipo:fd.get('tipo'),telefone:fd.get('telefone').trim(),email:fd.get('email').trim(),obs:fd.get('obs').trim()};
-var res;if(eid){if(!can('edit'))return;res=await sb.from('clientes').update(p).eq('id',eid)}else{if(!can('create'))return;res=await sb.from('clientes').insert(p)}
-if(res.error){toast('❌ '+(res.error.message||res.error));return}
-await loadAllData();resetFormCli();toast('✅')});
-async function delCli(id){if(!can('delete')){toast('⛔ Apenas admin');return}if(!confirm('Excluir?'))return;var res=await sb.from('clientes').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
+document.getElementById('formCliente').addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(this);var eid=fd.get('editId');var p={nome:fd.get('nome').trim(),tipo:fd.get('tipo'),telefone:fd.get('telefone').trim(),email:fd.get('email').trim(),obs:fd.get('obs').trim()};var res;if(eid){if(!can('edit'))return;res=await sb.from('clientes').update(p).eq('id',eid)}else{if(!can('create'))return;res=await sb.from('clientes').insert(p)}if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData();resetFormCli();toast('✅')});
+async function delCli(id){if(!can('delete')){toast('⛔ Sem permissão');return}if(!confirm('Excluir?'))return;var res=await sb.from('clientes').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
 function openHist(cid){var cl=DATA.clientes.find(function(c){return c.id===cid});if(!cl)return;navigate('cliente-historico');$('clienteHistTitle').textContent='📋 '+cl.nome;var all=[];DATA.os.forEach(function(o){if(o.cliente_id===cid)all.push({d:o.data_abertura,t:'🔧 '+o.numero,b:o.defeito||'',s:o.status})});DATA.visitas.forEach(function(v){if(v.cliente_id===cid)all.push({d:v.data||v.criado_em,t:'🚗 '+v.numero,b:v.falha||''})});all.sort(function(a,b){return new Date(b.d)-new Date(a.d)});$('clienteHistContent').innerHTML=all.length?all.map(function(i){return'<p><b>'+esc(fmtD(i.d))+'</b> — '+esc(i.t)+'<br>'+esc(i.b)+(i.s?'<br>'+badge(i.s):'')+'</p>'}).join(''):'<p class="mut">Sem histórico.</p>'}
 
 // --- EQUIPAMENTOS ---
 async function renderEq(){$('selEquipCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');$('panelEquipForm').style.display=can('create')?'':'none';$('tbEquips').innerHTML=DATA.equipamentos.map(function(e){var cl=DATA.clientes.find(function(c){return c.id===e.cliente_id});var a='<button class="bi bsm" onclick="openQr(\''+e.id+'\')">🔲</button>';if(can('edit'))a+=' <button class="bw bsm" onclick="editEq(\''+e.id+'\')">✏️</button>';if(can('delete'))a+=' <button class="bd bsm" onclick="delEq(\''+e.id+'\')">✕</button>';return'<tr><td><strong>'+esc(e.serie)+'</strong></td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(e.modelo)+'</td><td>'+esc(e.status)+'</td><td>'+a+'</td></tr>'}).join('')||'<tr><td colspan="6" class="mut">Nenhum.</td></tr>'}
 function resetFormEq(){$('formEquip').reset();$('formEquip').editId.value='';$('btnCancelEq').style.display='none';$('equipPanelTitle').textContent='➕ Novo Equipamento'}
 function editEq(id){if(!can('edit'))return;var e=DATA.equipamentos.find(function(x){return x.id===id});if(!e)return;var f=$('formEquip');f.serie.value=e.serie;f.cliente_id.value=e.cliente_id;f.marca.value=e.marca||'BestCode';f.modelo.value=e.modelo;f.local.value=e.local||'';f.status.value=e.status;f.editId.value=id;$('equipPanelTitle').textContent='✏️ Editar';$('btnCancelEq').style.display=''}
-document.getElementById('formEquip').addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(this);var eid=fd.get('editId');var p={serie:fd.get('serie').trim(),cliente_id:fd.get('cliente_id'),marca:fd.get('marca').trim()||'BestCode',modelo:fd.get('modelo'),local:fd.get('local').trim(),status:fd.get('status')};
-if(!p.cliente_id){alert('Selecione cliente.');return}
-var res;if(eid){if(!can('edit'))return;res=await sb.from('equipamentos').update(p).eq('id',eid)}else{if(!can('create'))return;res=await sb.from('equipamentos').insert(p)}
-if(res.error){toast('❌ '+(res.error.message||res.error));return}
-await loadAllData();resetFormEq();toast('✅')});
-async function delEq(id){if(!can('delete')){toast('⛔ Apenas admin');return}if(!confirm('Excluir?'))return;var res=await sb.from('equipamentos').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
+document.getElementById('formEquip').addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(this);var eid=fd.get('editId');var p={serie:fd.get('serie').trim(),cliente_id:fd.get('cliente_id'),marca:fd.get('marca').trim()||'BestCode',modelo:fd.get('modelo'),local:fd.get('local').trim(),status:fd.get('status')};if(!p.cliente_id){alert('Selecione cliente.');return}var res;if(eid){if(!can('edit'))return;res=await sb.from('equipamentos').update(p).eq('id',eid)}else{if(!can('create'))return;res=await sb.from('equipamentos').insert(p)}if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData();resetFormEq();toast('✅')});
+async function delEq(id){if(!can('delete')){toast('⛔ Sem permissão');return}if(!confirm('Excluir?'))return;var res=await sb.from('equipamentos').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await loadAllData()}
 
 // --- PEÇAS ---
 function renderPc(){var s=($('searchPecas')?$('searchPecas').value:'').toLowerCase().trim();var f=s?DATA.pecas.filter(function(p){return(p.codigo||'').toLowerCase().indexOf(s)>=0||(p.descricao||'').toLowerCase().indexOf(s)>=0||(p.compativel||'').toLowerCase().indexOf(s)>=0||(p.ref||'').toLowerCase().indexOf(s)>=0}):DATA.pecas;$('pcCount').textContent=f.length+' peças';$('tbPecas').innerHTML=f.map(function(p){return'<tr><td>'+(p.ref?esc(p.ref):'-')+'</td><td><code>'+esc(p.codigo||'-')+'</code></td><td>'+esc(p.descricao)+'</td><td>'+esc(p.categoria||'-')+'</td><td>'+esc(p.compativel||'-')+'</td></tr>'}).join('')||'<tr><td colspan="5" class="mut">Vazio.</td></tr>'}
@@ -395,161 +445,32 @@ function renderPc(){var s=($('searchPecas')?$('searchPecas').value:'').toLowerCa
 // --- OS ---
 function filterOsEquip(ci){var es=$('osEquip');if(!ci){es.innerHTML='<option value="">Selecione cliente</option>';es.disabled=true;return}var eqs=DATA.equipamentos.filter(function(e){return e.cliente_id===ci});es.innerHTML='<option value="">Selecione...</option>'+eqs.map(function(e){return'<option value="'+e.id+'">'+esc(e.serie)+' - '+esc(e.modelo)+'</option>'}).join('');es.disabled=false}
 async function renderOs(){$('osCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');filterOsEquip('');$('panelOsForm').style.display=can('create_os')?'':'none';$('tbOs').innerHTML=DATA.os.map(function(o){var eq=DATA.equipamentos.find(function(e){return e.id===o.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===o.cliente_id});return'<tr class="crow" onclick="openOs(\''+o.id+'\')"><td><b>'+esc(o.numero)+'</b></td><td>'+esc(fmtD(o.data_abertura))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(o.defeito||'-')+'</td><td>'+badge(o.status)+'</td></tr>'}).join('')||'<tr><td colspan="6" class="mut">Nenhuma.</td></tr>'}
-document.getElementById('formOS').addEventListener('submit',async function(e){
-  e.preventDefault();
-  if(!can('create_os')){toast('⛔ Sem permissão');return}
-  var fd=new FormData(this);
-  var ei=$('osEquip').value,ci=$('osCliente').value;
-  if(!ci||!ei){alert('Selecione cliente e equipamento.');return}
-  var ano=new Date().getFullYear();
-  var prefix='OS-'+ano+'-';
-  var n=String((DATA.os.filter(function(o){return o.numero&&o.numero.startsWith(prefix)}).length||0)+1).padStart(4,'0');
-  var p={
-    numero:prefix+n,
-    cliente_id:ci,
-    equipamento_id:ei,
-    tecnico:fd.get('tecnico').trim()||(PROFILE.nome||ME.email),
-    tipo:fd.get('tipo'),
-    prioridade:fd.get('prioridade')||'Média',
-    status:'Aberta',
-    defeito:fd.get('defeito').trim(),
-    data_abertura:new Date().toISOString()
-  };
-  try{
-    var res=await sb.from('ordens_servico').insert(p).select().single();
-    if(res.error)throw res.error;
-    toast('✅ OS '+p.numero+' criada!');
-    await loadAllData();
-    this.reset();
-    filterOsEquip('');
-    openOs(res.data.id);
-  }catch(err){
-    toast('❌ Erro: '+(err.message||err));
-    console.error(err);
-  }
-});
-
-async function openOs(id){var os=DATA.os.find(function(o){return o.id===id});if(!os)return;curOs=os;navigate('os-detail');$('detailOsNumero').textContent=os.numero;$('detailOsBadge').outerHTML=badge(os.status).replace('class="badge','id="detailOsBadge" class="badge');var eq=DATA.equipamentos.find(function(e){return e.id===os.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===os.cliente_id});var ce=can('edit_os');$('detailOsForm').innerHTML='<div><label>Cliente</label><input value="'+esc(cl?cl.nome:'-')+'" disabled></div><div><label>Equipamento</label><input value="'+esc(eq?eq.serie:'-')+'" disabled></div><div><label>Técnico</label>'+(ce?'<input value="'+esc(os.tecnico||'')+'" onchange="updOs(\'tecnico\',this.value)">':'<input value="'+esc(os.tecnico||'-')+'" disabled>')+'</div><div><label>Status</label>'+(ce?'<select onchange="updOs(\'status\',this.value)">'+['Aberta','Em análise','Aguardando peça','Em manutenção','Em teste','Concluída','Cancelada'].map(function(s){return'<option'+(os.status===s?' selected':'')+'>'+s+'</option>'}).join('')+'</select>':'<input value="'+esc(os.status)+'" disabled>')+'</div><div style="grid-column:1/-1"><label>Defeito</label><textarea disabled>'+esc(os.defeito||'')+'</textarea></div>';$('btnDelOs').style.display=can('delete_os')?'inline-block':'none';$('osDetailTabs').innerHTML='<button class="tab-btn active" onclick="switchTab(\'laudo\',this)">📝 Laudo</button><button class="tab-btn" onclick="switchTab(\'pecas-uso\',this)">🔩 Usadas</button><button class="tab-btn" onclick="switchTab(\'fotos\',this)">📸 Fotos</button><button class="tab-btn" onclick="switchTab(\'historico\',this)">📜 Hist.</button>';
-var lf=$('formLaudo');var cf=can('fill_laudo');for(var i=0;i<lf.elements.length;i++){if(lf.elements[i].name)lf.elements[i].disabled=!cf}$('formLaudo').querySelector('button[type=submit]').style.display=cf?'':'none';
-$('formAddPecaUso').style.display=can('add_peca_os')?'':'none';$('photoUploadLabel').style.display=can('upload_foto')?'':'none';
-var lResp=await sb.from('laudos').select('*').eq('os_id',os.id).maybeSingle();
-var l=(lResp&&lResp.data)||{};
-lf.constatado.value=l.defeito_constatado||'';lf.causa.value=l.causa||'';lf.testes.value=l.testes||'';lf.servicos.value=l.servicos||'';lf.resultado.value=l.resultado||'';
-renderOsPecas();renderPhotos();renderHist()}
-function updOs(f,v){if(!can('edit_os')){toast('⛔');return}sb.from('ordens_servico').update({[f]:v}).eq('id',curOs.id).then(function(){curOs[f]=v;if(f==='status')$('detailOsBadge').outerHTML=badge(v).replace('class="badge','id="detailOsBadge" class="badge')})}
+document.getElementById('formOS').addEventListener('submit',async function(e){e.preventDefault();if(!can('create_os')){toast('⛔ Sem permissão');return}var fd=new FormData(this);var ei=$('osEquip').value,ci=$('osCliente').value;if(!ci||!ei){alert('Selecione cliente e equipamento.');return}var ano=new Date().getFullYear();var prefix='OS-'+ano+'-';var n=String((DATA.os.filter(function(o){return o.numero&&o.numero.startsWith(prefix)}).length||0)+1).padStart(4,'0');var p={numero:prefix+n,cliente_id:ci,equipamento_id:ei,tecnico:fd.get('tecnico').trim()||(PROFILE.nome||ME.email),tipo:fd.get('tipo'),prioridade:fd.get('prioridade')||'Média',status:'Aberta',defeito:fd.get('defeito').trim(),data_abertura:new Date().toISOString()};try{var res=await sb.from('ordens_servico').insert(p).select().single();if(res.error)throw res.error;toast('✅ OS '+p.numero+' criada!');await loadAllData();this.reset();filterOsEquip('');openOs(res.data.id)}catch(err){toast('❌ Erro: '+(err.message||err));console.error(err)}});
+async function openOs(id){var os=DATA.os.find(function(o){return o.id===id});if(!os)return;curOs=os;navigate('os-detail');$('detailOsNumero').textContent=os.numero;$('detailOsBadge').outerHTML=badge(os.status).replace('class="badge","id="detailOsBadge" class="badge');var eq=DATA.equipamentos.find(function(e){return e.id===os.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===os.cliente_id});var ce=can('edit_os');$('detailOsForm').innerHTML='<div><label>Cliente</label><input value="'+esc(cl?cl.nome:'-')+'" disabled></div><div><label>Equipamento</label><input value="'+esc(eq?eq.serie:'-')+'" disabled></div><div><label>Técnico</label>'+(ce?'<input value="'+esc(os.tecnico||'')+'" onchange="updOs(\'tecnico\',this.value)">':'<input value="'+esc(os.tecnico||'-')+'" disabled>')+'</div><div><label>Status</label>'+(ce?'<select onchange="updOs(\'status\',this.value)">'+['Aberta','Em análise','Aguardando peça','Em manutenção','Em teste','Concluída','Cancelada'].map(function(s){return'<option'+(os.status===s?' selected':'')+'>'+s+'</option>'}).join('')+'</select>':'<input value="'+esc(os.status)+'" disabled>')+'</div><div style="grid-column:1/-1"><label>Defeito</label><textarea disabled>'+esc(os.defeito||'')+'</textarea></div>';$('btnDelOs').style.display=can('delete_os')?'inline-block':'none';$('osDetailTabs').innerHTML='<button class="tab-btn active" onclick="switchTab(\'laudo\',this)">📝 Laudo</button><button class="tab-btn" onclick="switchTab(\'pecas-uso\',this)">🔩 Usadas</button><button class="tab-btn" onclick="switchTab(\'fotos\',this)">📸 Fotos</button><button class="tab-btn" onclick="switchTab(\'historico\',this)">📜 Hist.</button>';var lf=$('formLaudo');var cf=can('fill_laudo');for(var i=0;i<lf.elements.length;i++){if(lf.elements[i].name)lf.elements[i].disabled=!cf}$('formLaudo').querySelector('button[type=submit]').style.display=cf?'':'none';$('formAddPecaUso').style.display=can('add_peca_os')?'':'none';$('photoUploadLabel').style.display=can('upload_foto')?'':'none';var lResp=await sb.from('laudos').select('*').eq('os_id',os.id).maybeSingle();var l=(lResp&&lResp.data)||{};lf.constatado.value=l.defeito_constatado||'';lf.causa.value=l.causa||'';lf.testes.value=l.testes||'';lf.servicos.value=l.servicos||'';lf.resultado.value=l.resultado||'';renderOsPecas();renderPhotos();renderHist()}
+function updOs(f,v){if(!can('edit_os')){toast('⛔');return}sb.from('ordens_servico').update({[f]:v}).eq('id',curOs.id).then(function(){curOs[f]=v;if(f==='status')$('detailOsBadge').outerHTML=badge(v).replace('class="badge","id="detailOsBadge" class="badge')})}
 function switchTab(t,btn){document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});$('tab-'+t).classList.add('active');document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});btn.classList.add('active')}
-document.getElementById('formLaudo').addEventListener('submit',async function(e){
-  e.preventDefault();
-  if(!can('fill_laudo')){toast('⛔');return}
-  var fd=new FormData(this);
-  var payload={os_id:curOs.id,defeito_constatado:fd.get('constatado').trim(),causa:fd.get('causa').trim(),testes:fd.get('testes').trim(),servicos:fd.get('servicos').trim(),resultado:fd.get('resultado')};
-  try{
-    var exist=await sb.from('laudos').select('id').eq('os_id',curOs.id).maybeSingle();
-    var res;
-    if(exist&&exist.data)res=await sb.from('laudos').update(payload).eq('id',exist.data.id);
-    else res=await sb.from('laudos').insert(payload);
-    if(res.error)throw res.error;
-    toast('✅ Laudo salvo!');
-  }catch(err){toast('❌ '+(err.message||err))}
-});
-async function renderOsPecas(){
-  var res=await sb.from('os_pecas').select('*').eq('os_id',curOs.id).eq('tipo','usada');
-  var pu=res.data||[];
-  $('tbPecasUso').innerHTML=pu.length?pu.map(function(p){var pc=DATA.pecas.find(function(x){return x.id===p.peca_id});return'<tr><td>'+esc(pc?(pc.codigo+' - '+pc.descricao):'?')+'</td><td>'+p.qtd+'</td><td>'+(can('add_peca_os')?'<button class="bd bsm" onclick="delPU(\''+p.id+'\')">✕</button>':'')+'</td></tr>'}).join(''):'<tr><td colspan="3" class="mut">Nenhuma.</td></tr>';
-}
-async function addPecaUso(){
-  if(!can('add_peca_os')){toast('⛔');return}
-  var d=$('uMatch');var pid=d.getAttribute('data-id');
-  if(!pid){alert('Selecione peça.');return}
-  try{
-    var res=await sb.from('os_pecas').insert({os_id:curOs.id,peca_id:pid,tipo:'usada',qtd:Number($('uQtd').value)||1});
-    if(res.error)throw res.error;
-    toast('✅ Peça registrada!');
-    await renderOsPecas();
-    $('uPecaSearch').value='';d.classList.remove('visible');
-  }catch(err){toast('❌ '+(err.message||err))}
-}
+document.getElementById('formLaudo').addEventListener('submit',async function(e){e.preventDefault();if(!can('fill_laudo')){toast('⛔');return}var fd=new FormData(this);var payload={os_id:curOs.id,defeito_constatado:fd.get('constatado').trim(),causa:fd.get('causa').trim(),testes:fd.get('testes').trim(),servicos:fd.get('servicos').trim(),resultado:fd.get('resultado')};try{var exist=await sb.from('laudos').select('id').eq('os_id',curOs.id).maybeSingle();var res;if(exist&&exist.data)res=await sb.from('laudos').update(payload).eq('id',exist.data.id);else res=await sb.from('laudos').insert(payload);if(res.error)throw res.error;toast('✅ Laudo salvo!')}catch(err){toast('❌ '+(err.message||err))}});
+async function renderOsPecas(){var res=await sb.from('os_pecas').select('*').eq('os_id',curOs.id).eq('tipo','usada');var pu=res.data||[];$('tbPecasUso').innerHTML=pu.length?pu.map(function(p){var pc=DATA.pecas.find(function(x){return x.id===p.peca_id});return'<tr><td>'+esc(pc?(pc.codigo+' - '+pc.descricao):'?')+'</td><td>'+p.qtd+'</td><td>'+(can('add_peca_os')?'<button class="bd bsm" onclick="delPU(\''+p.id+'\')">✕</button>':'')+'</td></tr>'}).join(''):'<tr><td colspan="3" class="mut">Nenhuma.</td></tr>'}
+async function addPecaUso(){if(!can('add_peca_os')){toast('⛔');return}var d=$('uMatch');var pid=d.getAttribute('data-id');if(!pid){alert('Selecione peça.');return}try{var res=await sb.from('os_pecas').insert({os_id:curOs.id,peca_id:pid,tipo:'usada',qtd:Number($('uQtd').value)||1});if(res.error)throw res.error;toast('✅ Peça registrada!');await renderOsPecas();$('uPecaSearch').value='';d.classList.remove('visible')}catch(err){toast('❌ '+(err.message||err))}}
 async function delPU(id){if(!can('add_peca_os')){toast('⛔');return}if(!confirm('Remover?'))return;var res=await sb.from('os_pecas').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await renderOsPecas()}
-async function delOsAtual(){if(!can('delete_os')){toast('⛔ Apenas admin');return}if(!confirm('Excluir OS?'))return;await sb.from('ordens_servico').delete().eq('id',curOs.id);await loadAllData();navigate('os')}
-
-async function renderPhotos(){
-  var res=await sb.from('fotos').select('*').eq('os_id',curOs.id).order('criado_em');
-  var fotos=res.data||[];
-  var g=$('photoGrid');var up=g.querySelector('.pupload');
-  g.querySelectorAll('.pcard').forEach(function(c){c.remove()});
-  fotos.forEach(function(f){var d=document.createElement('div');d.className='pcard';d.innerHTML='<img src="'+f.url+'" onclick="openLb(\''+f.url+'\')">'+(can('upload_foto')?'<button class="remove-photo" onclick="delFoto(\''+f.id+'\')">✕</button>':'');g.insertBefore(d,up)});
-}
-async function addPhotos(inp){
-  if(!can('upload_foto')){toast('⛔');return}
-  Array.from(inp.files).forEach(async function(f){
-    if(f.size>2000000){toast('⚠️ >2MB');return}
-    toast('⏳ Enviando foto...');
-    var r=new FileReader();
-    r.onload=async function(e){
-      var b64=e.target.result.split(',')[1];
-      var url=await uploadToImgBB(b64);
-      if(url){
-        var res=await sb.from('fotos').insert({os_id:curOs.id,url:url});
-        if(res.error){toast('❌ '+(res.error.message||res.error));return}
-        await renderPhotos();
-        toast('✅ Foto na nuvem!');
-      }else toast('❌ Erro ImgBB');
-    };
-    r.readAsDataURL(f);
-  });
-  inp.value='';
-}
+async function delOsAtual(){if(!can('delete_os')){toast('⛔ Sem permissão');return}if(!confirm('Excluir OS?'))return;await sb.from('ordens_servico').delete().eq('id',curOs.id);await loadAllData();navigate('os')}
+async function renderPhotos(){var res=await sb.from('fotos').select('*').eq('os_id',curOs.id).order('criado_em');var fotos=res.data||[];var g=$('photoGrid');var up=g.querySelector('.pupload');g.querySelectorAll('.pcard').forEach(function(c){c.remove()});fotos.forEach(function(f){var d=document.createElement('div');d.className='pcard';d.innerHTML='<img src="'+f.url+'" onclick="openLb(\''+f.url+'\')">'+(can('upload_foto')?'<button class="remove-photo" onclick="delFoto(\''+f.id+'\')">✕</button>':'');g.insertBefore(d,up)})}
+async function addPhotos(inp){if(!can('upload_foto')){toast('⛔');return}Array.from(inp.files).forEach(async function(f){if(f.size>2000000){toast('⚠️ >2MB');return}toast('⏳ Enviando foto...');var r=new FileReader();r.onload=async function(e){var b64=e.target.result.split(',')[1];var url=await uploadToImgBB(b64);if(url){var res=await sb.from('fotos').insert({os_id:curOs.id,url:url});if(res.error){toast('❌ '+(res.error.message||res.error));return}await renderPhotos();toast('✅ Foto na nuvem!')}else toast('❌ Erro ImgBB')};r.readAsDataURL(f)});inp.value=''}
 async function delFoto(id){if(!can('upload_foto')){toast('⛔');return}if(!confirm('Remover?'))return;var res=await sb.from('fotos').delete().eq('id',id);if(res.error){toast('❌ '+(res.error.message||res.error));return}await renderPhotos()}
 function openLb(s){$('lightboxImg').src=s;$('lightbox').classList.add('active')}
 function renderHist(){var all=[];DATA.os.forEach(function(o){if(o.equipamento_id===curOs.equipamento_id)all.push({d:o.data_abertura,t:'🔧 '+o.numero,b:o.defeito||'',s:o.status})});DATA.visitas.forEach(function(v){if(v.equipamento_id===curOs.equipamento_id)all.push({d:v.data||v.criado_em,t:'🚗 '+v.numero,b:v.falha||''})});all.sort(function(a,b){return new Date(b.d)-new Date(a.d)});$('historicoTimeline').innerHTML=all.length?all.map(function(i){return'<p><b>'+esc(fmtD(i.d))+'</b> — '+esc(i.t)+'<br>'+esc(i.b)+(i.s?'<br>'+badge(i.s):'')+'</p>'}).join(''):'<p class="mut">Sem histórico.</p>'}
 function openQr(eid){var e=DATA.equipamentos.find(function(x){return x.id===eid});if(!e)return;var url='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent('CMMS|'+e.serie+'|'+e.modelo);var w=window.open('','_blank');if(!w){alert('Permita popups');return}w.document.write('<body style="font-family:Arial;text-align:center;padding:20px"><img src="'+url+'" style="width:180px;height:180px"><br><b>'+esc(e.serie)+'</b><br>'+esc(e.modelo)+'</body>');w.document.close();setTimeout(function(){try{w.print()}catch(err){}},600)}
 
 // --- VISITAS ---
-async function renderVisitas(){$('btnNovaVisita').style.display=can('create_visita')?'':'none';$('tbVisitas').innerHTML=DATA.visitas.map(function(v){var cl=DATA.clientes.find(function(c){return c.id===v.cliente_id});var eq=DATA.equipamentos.find(function(e){return e.id===v.equipamento_id});var a='<button class="bw bsm" onclick="openVisitaForm(\''+v.id+'\')">✏️</button>';if(can('delete_visita'))a+=' <button class="bd bsm" onclick="delVisita(\''+v.id+'\')">✕</button>';return'<tr><td><b>'+esc(v.numero)+'</b></td><td>'+esc(fmtDS(v.data))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(v.tecnico||'-')+'</td><td>'+esc(v.tipo_chamada||'-')+'</td><td>'+a+'</td></tr>'}).join('')||'<tr><td colspan="7" class="mut">Nenhuma.</td></tr>'}
+async function renderVisitas(){$('btnNovaVisita').style.display=can('create_visita')?'':'none';$('tbVisitas').innerHTML=DATA.visitas.map(function(v){var cl=DATA.clientes.find(function(c){return c.id===v.cliente_id});var eq=DATA.equipamentos.find(function(e){return e.id===v.equipamento_id});var a='';if(can('edit_visita'))a+='<button class="bw bsm" onclick="openVisitaForm(\''+v.id+'\')">✏️</button>';if(can('delete_visita'))a+=' <button class="bd bsm" onclick="delVisita(\''+v.id+'\')">✕</button>';return'<tr><td><b>'+esc(v.numero)+'</b></td><td>'+esc(fmtDS(v.data))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(v.tecnico||'-')+'</td><td>'+esc(v.tipo_chamada||'-')+'</td><td>'+a+'</td></tr>'}).join('')||'<tr><td colspan="7" class="mut">Nenhuma.</td></tr>'}
 function openVisitaForm(id){if(!can('create_visita')&&!can('edit_visita')){toast('⛔');return}curEditVisita=id||null;navigate('visita-form');$('vCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');initSig();clearSig();if(id){var v=DATA.visitas.find(function(x){return x.id===id});if(!v)return;$('visitaFormTitle').textContent='✏️ Editar';$('visitaNumero').textContent=v.numero;$('vCliente').value=v.cliente_id;vClienteChanged();setTimeout(function(){$('vEquip').value=v.equipamento_id;vEquipChanged()},50);$('vTecnico').value=v.tecnico||'';$('vContrManut').value=v.contr_manut||'N';$('vFalha').value=v.falha||'';$('vServico').value=v.servico||'';$('vLaudo').value=v.laudo||'';$('vData').value=v.data?v.data.slice(0,10):'';$('vSaidaTesla').value=v.saida_tesla||'';$('vChegadaCliente').value=v.chegada_cliente||'';$('vSaidaCliente').value=v.saida_cliente||'';$('vChegadaTesla').value=v.chegada_tesla||'';$('vKm').value=v.km||'';$('vServicoHN').value=v.servico_hn||'';$('vDeslocHN').value=v.desloc_hn||'';$('vObs').value=v.obs||'';$('vNomeExtenso').value=v.nome_extenso||'';$('vCargo').value=v.cargo||'';document.querySelectorAll('input[name=vTipo]').forEach(function(r){r.checked=(r.value===v.tipo_chamada)});tmpPecas=[];renderPecasVisita()}else{$('visitaFormTitle').textContent='🚗 Nova Visita';$('visitaNumero').textContent='';$('vCliente').value='';$('vEquip').innerHTML='<option value="">Selecione cliente</option>';$('vEquip').disabled=true;$('vTecnico').value=PROFILE.nome||ME.email;$('vContrManut').value='N';$('vFalha').value='';$('vServico').value='';$('vLaudo').value='';$('vData').value=new Date().toISOString().slice(0,10);document.querySelectorAll('input[name=vTipo]').forEach(function(r){r.checked=(r.value==='Manutenção')});tmpPecas=[];renderPecasVisita()}}
 function vClienteChanged(){var ci=$('vCliente').value;var es=$('vEquip');if(!ci){es.disabled=true;return}var eqs=DATA.equipamentos.filter(function(e){return e.cliente_id===ci});es.innerHTML='<option value="">Selecione...</option>'+eqs.map(function(e){return'<option value="'+e.id+'">'+esc(e.serie)+' - '+esc(e.modelo)+'</option>'}).join('');es.disabled=false;var c=DATA.clientes.find(function(x){return x.id===ci});if(c){$('vContato').value=c.nome||'';$('vFone').value=c.telefone||''}}
 function vEquipChanged(){var e=DATA.equipamentos.find(function(x){return x.id===$('vEquip').value});$('vSerie').value=e?e.serie:''}
 function calcHoras(){function t2(t){if(!t)return null;var p=t.split(':');return(+p[0])*60+(+p[1])}var st=t2($('vSaidaTesla').value),cc=t2($('vChegadaCliente').value),sc=t2($('vSaidaCliente').value),ct=t2($('vChegadaTesla').value);var serv=(sc!=null&&cc!=null&&sc>=cc)?(sc-cc):0;var desc=0;if(st!=null&&cc!=null&&cc>=st)desc+=cc-st;if(sc!=null&&ct!=null&&ct>=sc)desc+=ct-sc;$('vServicoHN').value=(serv/60).toFixed(1);$('vDeslocHN').value=(desc/60).toFixed(1)}
 function addPecaVisita(){var d=$('vMatch');var pid=d.getAttribute('data-id');if(!pid){alert('Selecione peça.');return}tmpPecas.push({peca_id:pid,qtd:Number($('vPecaQtd').value)||1});renderPecasVisita();$('vPecaSearch').value='';d.classList.remove('visible')}
 function renderPecasVisita(){$('tbPecasVisita').innerHTML=tmpPecas.length?tmpPecas.map(function(pu,i){var p=DATA.pecas.find(function(x){return x.id===pu.peca_id});return'<tr><td>'+pu.qtd+'</td><td>'+(p?esc(p.ref||'-'):'-')+'</td><td><code>'+(p?esc(p.codigo||'-'):'?')+'</code></td><td>'+(p?esc(p.descricao):'?')+'</td><td><button class="bd bsm" onclick="tmpPecas.splice('+i+',1);renderPecasVisita()">✕</button></td></tr>'}).join(''):'<tr><td colspan="5" class="mut">Nenhuma.</td></tr>'}
-async function saveVisita(){
-  var ci=$('vCliente').value,ei=$('vEquip').value;
-  if(!ci||!ei){alert('Selecione cliente e equipamento.');return}
-  if(!$('vFalha').value.trim()){alert('Informe falha.');return}
-  var tipo='Manutenção';document.querySelectorAll('input[name=vTipo]').forEach(function(r){if(r.checked)tipo=r.value});
-  var sigUrl=null;
-  if(sigHas){toast('⏳ Enviando assinatura...');sigUrl=await uploadToImgBB(sigC.toDataURL('image/png').split(',')[1])}
-  var p={cliente_id:ci,equipamento_id:ei,tecnico:$('vTecnico').value||(PROFILE.nome||ME.email),tipo_chamada:tipo,contr_manut:$('vContrManut').value,falha:$('vFalha').value,servico:$('vServico').value,laudo:$('vLaudo').value,data:$('vData').value||null,saida_tesla:$('vSaidaTesla').value||null,chegada_cliente:$('vChegadaCliente').value||null,saida_cliente:$('vSaidaCliente').value||null,chegada_tesla:$('vChegadaTesla').value||null,km:$('vKm').value||null,servico_hn:$('vServicoHN').value||null,desloc_hn:$('vDeslocHN').value||null,obs:$('vObs').value,nome_extenso:$('vNomeExtenso').value,cargo:$('vCargo').value,assinatura_url:sigUrl};
-  try{
-    var res;
-    if(curEditVisita)res=await sb.from('visitas').update(p).eq('id',curEditVisita);
-    else{var ano=new Date().getFullYear();p.numero='VIS-'+ano+'-'+String(DATA.visitas.length+1).padStart(4,'0');res=await sb.from('visitas').insert(p)}
-    if(res.error)throw res.error;
-    if(tmpPecas.length&&!curEditVisita&&res.data){await sb.from('visita_pecas').insert(tmpPecas.map(function(pu){return{visita_id:res.data.id,peca_id:pu.peca_id,qtd:pu.qtd}}))}
-    toast('✅ Salvo!');
-    await loadAllData();
-    navigate('visitas');
-  }catch(err){toast('❌ '+(err.message||err))}
-}
-async function delVisita(id){if(!can('delete_visita')){toast('⛔ Apenas admin');return}if(!confirm('Excluir?'))return;await sb.from('visitas').delete().eq('id',id);await loadAllData()}
-
-// --- USERS (admin only) ---
-async function renderUsers(){
-  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}
-  // Busca dados atualizados de auth.users via admin (limitado)
-  $('tbUsers').innerHTML=DATA.profiles.map(function(p){
-    return '<tr><td>'+esc(p.login||'-')+'</td><td><span class="role-badge role-'+p.role+'">'+roleLabel(p.role)+'</span></td><td>'+(p.ativo?'✅ Ativo':'❌ Inativo')+'</td><td><button class="bw bsm" onclick="promoteUser(\''+p.id+'\')">👑 Admin</button> <button class="bi bsm" onclick="setRole(\''+p.id+'\',\'tecnico\')">🔧 Téc</button> <button class="bs bsm" onclick="setRole(\''+p.id+'\',\'visualizador\')">👁️ Vis</button></td></tr>';
-  }).join('')||'<tr><td colspan="4" class="mut">Carregando...</td></tr>';
-}
-async function setRole(id,role){
-  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}
-  var res=await sb.from('profiles').update({role:role}).eq('id',id);
-  if(res.error){toast('❌ '+res.error.message);return}
-  toast('✅ Perfil atualizado');
-  await loadAllData();
-  renderUsers();
-}
-async function promoteUser(id){await setRole(id,'admin')}
+async function saveVisita(){var ci=$('vCliente').value,ei=$('vEquip').value;if(!ci||!ei){alert('Selecione cliente e equipamento.');return}if(!$('vFalha').value.trim()){alert('Informe falha.');return}var tipo='Manutenção';document.querySelectorAll('input[name=vTipo]').forEach(function(r){if(r.checked)tipo=r.value});var sigUrl=null;if(sigHas){toast('⏳ Enviando assinatura...');sigUrl=await uploadToImgBB(sigC.toDataURL('image/png').split(',')[1])}var p={cliente_id:ci,equipamento_id:ei,tecnico:$('vTecnico').value||(PROFILE.nome||ME.email),tipo_chamada:tipo,contr_manut:$('vContrManut').value,falha:$('vFalha').value,servico:$('vServico').value,laudo:$('vLaudo').value,data:$('vData').value||null,saida_tesla:$('vSaidaTesla').value||null,chegada_cliente:$('vChegadaCliente').value||null,saida_cliente:$('vSaidaCliente').value||null,chegada_tesla:$('vChegadaTesla').value||null,km:$('vKm').value||null,servico_hn:$('vServicoHN').value||null,desloc_hn:$('vDeslocHN').value||null,obs:$('vObs').value,nome_extenso:$('vNomeExtenso').value,cargo:$('vCargo').value,assinatura_url:sigUrl};try{var res;if(curEditVisita)res=await sb.from('visitas').update(p).eq('id',curEditVisita);else{var ano=new Date().getFullYear();p.numero='VIS-'+ano+'-'+String(DATA.visitas.length+1).padStart(4,'0');res=await sb.from('visitas').insert(p)}if(res.error)throw res.error;if(tmpPecas.length&&!curEditVisita&&res.data){await sb.from('visita_pecas').insert(tmpPecas.map(function(pu){return{visita_id:res.data.id,peca_id:pu.peca_id,qtd:pu.qtd}}))}toast('✅ Salvo!');await loadAllData();navigate('visitas')}catch(err){toast('❌ '+(err.message||err))}}
+async function delVisita(id){if(!can('delete_visita')){toast('⛔ Sem permissão');return}if(!confirm('Excluir?'))return;await sb.from('visitas').delete().eq('id',id);await loadAllData()}
 
 // --- DASHBOARD & REPORTS ---
 function renderDash(){var os=DATA.os;$('dashCards').innerHTML=[['Clientes',DATA.clientes.length],['Equip.',DATA.equipamentos.length],['OS Abertas',os.filter(function(o){return o.status!=='Concluída'&&o.status!=='Cancelada'}).length],['Visitas',DATA.visitas.length],['Peças',DATA.pecas.length]].map(function(c){return'<div class="card"><div>'+c[0]+'</div><strong>'+c[1]+'</strong></div>'}).join('');$('dashOsList').innerHTML=os.length?'<div class="twrap"><table><thead><tr><th>OS</th><th>Cliente</th><th>Status</th></tr></thead><tbody>'+os.slice(0,5).map(function(o){var cl=DATA.clientes.find(function(c){return c.id===o.cliente_id});return'<tr class="crow" onclick="openOs(\''+o.id+'\')"><td>'+esc(o.numero)+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+badge(o.status)+'</td></tr>'}).join('')+'</tbody></table></div>':'<p class="mut">Nenhuma OS.</p>'}

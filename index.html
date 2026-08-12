@@ -122,7 +122,7 @@ th{background:#f9fafb;color:var(--mu)}
 </div>
 
 <div id="appShell" style="display:none">
-<div class="mheader"><img id="mobileLogo" style="display:none" alt=""><span id="mobileAppName">CMMS</span><button style="background:none;border:none;color:#fff;font-size:1.5rem" onclick="toggleDrawer()">☰</button></div>
+<div class="mheader"><img id="mobileLogo" style="display:none" alt=""><span id="mobileAppName">CMMS</span><div style="display:flex;gap:.5rem;align-items:center"><button style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:.3rem .6rem;font-size:.8rem" onclick="doLogout()">Sair</button><button style="background:none;border:none;color:#fff;font-size:1.5rem" onclick="toggleDrawer()">☰</button></div></div>
 <aside class="sidebar"><div class="sidebar-header"><img id="sidebarLogo" style="display:none" alt=""><h1 id="sidebarAppName">CMMS</h1></div><nav class="sidebar-nav" id="sidebarNav"></nav><div class="sidebar-footer"><div class="sidebar-user"><div><strong id="sidebarUserName">-</strong><span id="sidebarUserRole">-</span></div><button class="bs bsm" style="width:auto" onclick="doLogout()">Sair</button></div></div></aside>
 
 <div class="main-content">
@@ -198,12 +198,12 @@ th{background:#f9fafb;color:var(--mu)}
 
 </div><!-- fim main-content -->
 
-<!-- Drawer DENTRO do appShell (correção) -->
 <nav class="mnav" id="mobileNav"></nav>
 <div class="doverlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
 <div style="padding:1rem;border-bottom:1px solid var(--bd);font-weight:700">Menu</div>
 <nav class="drawer-nav" id="drawerItems"></nav>
+<div style="padding:1rem;border-top:1px solid var(--bd)"><button style="width:100%;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:.65rem;font-weight:600" onclick="doLogout()">🚪 Sair</button></div>
 </div>
 </div><!-- fim appShell -->
 
@@ -211,7 +211,7 @@ th{background:#f9fafb;color:var(--mu)}
 <div id="toast" class="toast" style="display:none"></div>
 
 <script>
-var K_CFG='cmms_cfg_v33';
+var K_CFG='cmms_cfg_v34';
 var CFG=JSON.parse(localStorage.getItem(K_CFG)||'{}');
 var sb=null,sbAdmin=null,ME=null,PROFILE=null,PERMS=null;
 var DATA={clientes:[],equipamentos:[],pecas:[],os:[],visitas:[],profiles:[]};
@@ -240,13 +240,8 @@ window.onload=async function(){
       sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey);
       sbAdmin=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:false,autoRefreshToken:false}});
       $('btnLogin').disabled=false;
-      // AUTO-LOGIN: se já existe sessão salva, entra direto (persiste no mobile)
       var sess=await sb.auth.getSession();
-      if(sess.data&&sess.data.session){
-        ME=sess.data.session.user;
-        await enterApp();
-        return;
-      }
+      if(sess.data&&sess.data.session){ME=sess.data.session.user;await enterApp();return}
     }catch(e){console.error(e)}
   }else{$('btnLogin').disabled=true}
 };
@@ -279,7 +274,7 @@ async function enterApp(){
   $('sidebarUserRole').innerHTML='<span class="role-badge role-'+PROFILE.role+'">'+roleLabel(PROFILE.role)+'</span>';
   buildNavs();await loadAllData();
   if(DATA.pecas.length===0){await loadDefaultCatalog()}
-  navigate(getDefaultView());
+  navigate('dashboard');
   toast('☁️ Conectado como '+roleLabel(PROFILE.role));
 }
 async function doLogin(){

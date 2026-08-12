@@ -163,10 +163,9 @@ th{background:#f9fafb;color:var(--mu)}
 
 <section id="view-os-detail" class="view"><div class="fb no-print" style="margin-bottom:1rem"><button class="bs" onclick="navigate('os')">← Voltar</button><div><button class="bs" onclick="window.print()">🖨️ PDF</button> <button class="bd bsm" id="btnDelOs" onclick="delOsAtual()">Excluir</button></div></div><div class="panel"><div class="fb"><h2 id="detailOsNumero" style="margin:0;border:0;padding:0">OS</h2><span id="detailOsBadge" class="badge">Aberta</span></div><div class="fgrid" id="detailOsForm" style="margin-top:1rem"></div></div><div class="tabs no-print" id="osDetailTabs"></div><div id="tab-laudo" class="tab-content active panel"><h2>Laudo Técnico</h2><form id="formLaudo" class="fgrid"><div><label>Defeito Constatado</label><textarea name="constatado"></textarea></div><div><label>Causa</label><textarea name="causa"></textarea></div><div><label>Testes</label><textarea name="testes"></textarea></div><div><label>Serviços</label><textarea name="servicos"></textarea></div><div><label>Resultado</label><select name="resultado"><option value="">Pendente</option><option>Aprovado</option><option>Reprovado</option><option>Aguardando peça</option></select></div><div><button type="submit" class="bp">💾 Salvar Laudo</button></div></form></div><div id="tab-pecas-uso" class="tab-content panel"><h2>Peças Usadas</h2><form id="formAddPecaUso" class="fgrid" style="grid-template-columns:2fr 1fr auto;align-items:end"><div><label>Buscar Peça</label><input id="uPecaSearch" list="dlPecas" oninput="onPecaSearch(this,'uMatch')"><div id="uMatch" class="match"></div></div><div><label>Qtd</label><input type="number" id="uQtd" min="1" value="1"></div><div><button class="bg bsm" onclick="addPecaUso()">Registrar</button></div></form><div class="twrap"><table><thead><tr><th>Peça</th><th>Qtd</th><th></th></tr></thead><tbody id="tbPecasUso"></tbody></table></div></div><div id="tab-fotos" class="tab-content panel"><h2>Fotos</h2><div class="pgrid" id="photoGrid"><label class="pupload" id="photoUploadLabel"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><span style="font-size:2rem">📷</span><span style="font-size:.8rem">Adicionar</span></label></div></div><div id="tab-historico" class="tab-content panel"><h2>📜 Histórico</h2><div id="historicoTimeline"></div></div></section>
 
-<!-- USUÁRIOS -->
 <section id="view-users" class="view">
 <div class="panel"><h2>👥 Usuários & Perfis</h2>
-<p class="mut">Crie usuários, defina perfis e redefina senhas direto pelo sistema. <b>⚠️ Antes:</b> desligue "Confirm email" em Supabase → Authentication → Providers → Email.</p>
+<p class="mut">Crie usuários, defina perfis e redefina senhas. <b>⚠️ Antes:</b> desligue "Confirm email" em Supabase → Authentication → Providers → Email.</p>
 <div class="stitle">➕ Criar Novo Usuário</div>
 <form id="formNewUser" class="fgrid">
 <div><label>E-mail *</label><input type="email" name="email" required placeholder="tecnico@empresa.com"></div>
@@ -180,7 +179,6 @@ th{background:#f9fafb;color:var(--mu)}
 <div class="panel"><h2>Usuários Cadastrados</h2><div class="twrap"><table><thead><tr><th>E-mail</th><th>Nome</th><th>Perfil</th><th>Ativo</th><th>Ações</th></tr></thead><tbody id="tbUsers"></tbody></table></div></div>
 </section>
 
-<!-- MINHA SENHA -->
 <section id="view-minhasenha" class="view"><div class="panel"><h2>🔑 Minha Senha</h2>
 <p class="mut">Altere sua própria senha de acesso.</p>
 <form id="formMinhaSenha" class="fgrid" style="max-width:480px">
@@ -192,18 +190,22 @@ th{background:#f9fafb;color:var(--mu)}
 <div id="msMsg" class="lok" style="margin-top:.75rem"></div>
 </div></section>
 
-<!-- PERMISSÕES -->
-<section id="view-perms" class="view"><div class="panel"><h2>🔒 Edição de Permissões</h2><p class="mut">Defina o que cada perfil pode fazer. <b>Admin</b> tem acesso total e não pode ser limitado.</p>
+<section id="view-perms" class="view"><div class="panel"><h2>🔒 Edição de Permissões</h2><p class="mut">Defina o que cada perfil pode fazer. <b>Admin</b> tem acesso total.</p>
 <div class="fgrid" style="margin-bottom:1rem"><div><label>Editar perfil:</label><select id="permRole" onchange="renderPermGrid()"><option value="tecnico">🔧 Técnico</option><option value="visualizador">👁️ Visualizador</option></select></div></div>
 <div id="permGrid" class="perm-grid"></div>
 <div style="margin-top:1rem"><button class="bp" onclick="savePerms()">💾 Salvar Permissões</button> <button class="bs" onclick="resetPerms()">↩️ Restaurar Padrão</button></div>
 </div></section>
 
-</div>
+</div><!-- fim main-content -->
+
+<!-- Drawer DENTRO do appShell (correção) -->
 <nav class="mnav" id="mobileNav"></nav>
 <div class="doverlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
-<div class="drawer"><div style="padding:1rem;border-bottom:1px solid var(--bd);font-weight:700">Menu</div><nav class="drawer-nav" id="drawerItems"></nav></div>
+<div class="drawer" id="drawer">
+<div style="padding:1rem;border-bottom:1px solid var(--bd);font-weight:700">Menu</div>
+<nav class="drawer-nav" id="drawerItems"></nav>
 </div>
+</div><!-- fim appShell -->
 
 <div class="lightbox" id="lightbox" onclick="this.classList.remove('active')"><img id="lightboxImg" src=""></div>
 <div id="toast" class="toast" style="display:none"></div>
@@ -222,7 +224,6 @@ function toast(m){var t=$('toast');t.innerHTML=m;t.style.display='block';setTime
 function fmtD(d){return d?new Date(d).toLocaleString('pt-BR'):'-'}
 function fmtDS(d){return d?new Date(d).toLocaleDateString('pt-BR'):'-'}
 
-// --- PERMISSÕES ---
 var DEFAULT_PERMS={
   tecnico:{create:true,edit:true,delete:false,create_os:true,edit_os:true,delete_os:false,fill_laudo:true,add_peca_os:true,upload_foto:true,create_visita:true,edit_visita:true,delete_visita:false},
   visualizador:{create:false,edit:false,delete:false,create_os:false,edit_os:false,delete_os:false,fill_laudo:false,add_peca_os:false,upload_foto:false,create_visita:false,edit_visita:false,delete_visita:false}
@@ -233,17 +234,21 @@ function roleLabel(r){return{admin:'👑 Admin',tecnico:'🔧 Técnico',visualiz
 
 // --- CONFIG ---
 window.onload=async function(){
+  applyVisual();
   if(CFG.supabaseUrl && CFG.supabaseKey){
     try{
       sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey);
-      // Cliente separado que NÃO guarda sessão (pra criar usuários sem deslogar o admin)
       sbAdmin=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:false,autoRefreshToken:false}});
       $('btnLogin').disabled=false;
+      // AUTO-LOGIN: se já existe sessão salva, entra direto (persiste no mobile)
       var sess=await sb.auth.getSession();
-      if(sess.data.session)$('loginEmail').value=sess.data.session.user.email;
+      if(sess.data&&sess.data.session){
+        ME=sess.data.session.user;
+        await enterApp();
+        return;
+      }
     }catch(e){console.error(e)}
   }else{$('btnLogin').disabled=true}
-  applyVisual();
 };
 function toggleConfig(){$('configPanel').classList.toggle('active');$('cfgSupabaseUrl').value=CFG.supabaseUrl||'';$('cfgSupabaseKey').value=CFG.supabaseKey||'';$('cfgImgbbKey').value=CFG.imgbbKey||'';$('cfgAppName').value=CFG.appName||'';$('logoStatus').textContent=CFG.logoUrl?'✅ Logo atual':''}
 async function saveConfig(){
@@ -257,6 +262,26 @@ function importConfig(inp){var f=inp.files[0];if(!f)return;var r=new FileReader(
 function applyVisual(){var n=CFG.appName||'CMMS Datadores';document.title=n;['loginAppName','sidebarAppName','mobileAppName'].forEach(id=>{var e=$(id);if(e)e.textContent=(id==='loginAppName'?'🔧 ':'')+n});if(CFG.logoUrl){['loginLogo','sidebarLogo','mobileLogo'].forEach(id=>{var e=$(id);if(e){e.src=CFG.logoUrl;e.style.display='block'}})}}
 
 // --- AUTH ---
+async function enterApp(){
+  var profRes=await sb.from('profiles').select('*').eq('id',ME.id).maybeSingle();
+  var prof=profRes.data;
+  if(!prof){
+    var ins=await sb.from('profiles').insert({id:ME.id,nome:ME.email,login:ME.email,role:'tecnico',ativo:true}).select().single();
+    if(ins.error)throw new Error('Erro ao criar perfil: '+ins.error.message);
+    prof=ins.data;
+  }
+  PROFILE=prof;
+  if(!PROFILE.ativo){await sb.auth.signOut();throw new Error('Usuário inativo.')}
+  var cfgRes=await sb.from('config').select('*').eq('id',1).maybeSingle();
+  PERMS=(cfgRes.data&&cfgRes.data.data&&cfgRes.data.data.permissoes)||DEFAULT_PERMS;
+  $('loginScreen').classList.add('hidden');$('appShell').style.display='block';
+  $('sidebarUserName').textContent=PROFILE.nome||ME.email;
+  $('sidebarUserRole').innerHTML='<span class="role-badge role-'+PROFILE.role+'">'+roleLabel(PROFILE.role)+'</span>';
+  buildNavs();await loadAllData();
+  if(DATA.pecas.length===0){await loadDefaultCatalog()}
+  navigate(getDefaultView());
+  toast('☁️ Conectado como '+roleLabel(PROFILE.role));
+}
 async function doLogin(){
   var email=$('loginEmail').value.trim(),pass=$('loginPass').value;
   if(!email||!pass)return;
@@ -265,20 +290,7 @@ async function doLogin(){
     var res=await sb.auth.signInWithPassword({email:email,password:pass});
     if(res.error)throw res.error;
     ME=res.data.user;
-    var profRes=await sb.from('profiles').select('*').eq('id',ME.id).maybeSingle();
-    if(profRes.error)throw new Error('Erro ao buscar perfil: '+profRes.error.message);
-    if(!profRes.data)throw new Error('Perfil não encontrado. Rode o SQL de setup.');
-    PROFILE=profRes.data;
-    if(!PROFILE.ativo){await sb.auth.signOut();throw new Error('Usuário inativo.')}
-    var cfgRes=await sb.from('config').select('*').eq('id',1).maybeSingle();
-    PERMS=(cfgRes.data&&cfgRes.data.data&&cfgRes.data.data.permissoes)||DEFAULT_PERMS;
-    $('loginScreen').classList.add('hidden');$('appShell').style.display='block';
-    $('sidebarUserName').textContent=PROFILE.nome||ME.email;
-    $('sidebarUserRole').innerHTML='<span class="role-badge role-'+PROFILE.role+'">'+roleLabel(PROFILE.role)+'</span>';
-    buildNavs();await loadAllData();
-    if(DATA.pecas.length===0){toast('⏳ Carregando catálogo...');await loadDefaultCatalog()}
-    navigate('dashboard');
-    toast('☁️ Conectado como '+roleLabel(PROFILE.role));
+    await enterApp();
   }catch(e){
     $('btnLogin').textContent='Entrar';$('loginError').textContent='❌ '+(e.message||e);$('loginError').style.display='block';
   }
@@ -322,7 +334,7 @@ function renderPermGrid(){if(!PROFILE||PROFILE.role!=='admin'){$('permGrid').inn
 async function savePerms(){if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}var role=$('permRole').value;var rp={};document.querySelectorAll('#permGrid input[data-perm]').forEach(function(cb){rp[cb.getAttribute('data-perm')]=cb.checked});if(!PERMS)PERMS={tecnico:{},visualizador:{}};PERMS[role]=rp;var cur=await sb.from('config').select('*').eq('id',1).maybeSingle();var data=(cur&&cur.data&&cur.data.data)||{};data.permissoes=PERMS;var res=await sb.from('config').update({data:data}).eq('id',1);if(res.error){res=await sb.from('config').insert({id:1,data:data});if(res.error){toast('❌ '+res.error.message);return}}toast('✅ Permissões de "'+roleLabel(role)+'" salvas!')}
 function resetPerms(){PERMS=JSON.parse(JSON.stringify(DEFAULT_PERMS));renderPermGrid();toast('↩️ Padrão restaurado (clique Salvar para confirmar)')}
 
-// --- USUÁRIOS: CRIAR / PERFIL / SENHA / EXCLUIR ---
+// --- USUÁRIOS ---
 async function renderUsers(){
   if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}
   $('tbUsers').innerHTML=DATA.profiles.map(function(p){
@@ -338,72 +350,29 @@ async function renderUsers(){
   }).join('')||'<tr><td colspan="5" class="mut">Nenhum usuário.</td></tr>';
 }
 async function setRole(id,role){if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}var res=await sb.from('profiles').update({role:role}).eq('id',id);if(res.error){toast('❌ '+res.error.message);return}toast('✅ Perfil atualizado');await loadAllData();renderUsers()}
-async function askResetPwd(id,email){
-  var np=prompt('Nova senha para '+email+' (mínimo 6 caracteres):');
-  if(np===null)return;
-  if(np.length<6){alert('A senha precisa ter pelo menos 6 caracteres.');return}
-  await resetUserPwd(id,np);
-}
-async function resetUserPwd(id,newPass){
-  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}
-  try{
-    // Atualiza a senha do usuário via cliente que não persiste sessão
-    var res=await sbAdmin.auth.admin.updateUserById(id,{password:newPass});
-    if(res.error)throw res.error;
-    toast('✅ Senha redefinida!');
-  }catch(e){
-    // Fallback: se admin.updateUserById falhar (anon sem permissão), tenta via signUp flow não é possível.
-    toast('❌ '+e.message+' — Dica: use a chave service_role num Edge Function, ou redefina no painel do Supabase.');
-  }
-}
-async function delUser(id){
-  if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}
-  if(id===ME.id){alert('Você não pode excluir a si mesmo.');return}
-  if(!confirm('Excluir este usuário? (remove o login e o perfil)'))return;
-  try{
-    var r1=await sbAdmin.auth.admin.deleteUser(id);
-    if(r1.error)throw r1.error;
-    toast('✅ Usuário excluído');
-    await loadAllData();renderUsers();
-  }catch(e){
-    // Se não conseguir deletar o auth user, pelo menos remove o profile
-    await sb.from('profiles').delete().eq('id',id);
-    toast('⚠️ Perfil removido. Login no Supabase: '+e.message);
-    await loadAllData();renderUsers();
-  }
-}
-
-// CRIAR USUÁRIO (signUp sem afetar sessão do admin)
+async function askResetPwd(id,email){var np=prompt('Nova senha para '+email+' (mínimo 6 caracteres):');if(np===null)return;if(np.length<6){alert('A senha precisa ter pelo menos 6 caracteres.');return}await resetUserPwd(id,np)}
+async function resetUserPwd(id,newPass){if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}try{var res=await sbAdmin.auth.admin.updateUserById(id,{password:newPass});if(res.error)throw res.error;toast('✅ Senha redefinida!')}catch(e){toast('❌ '+e.message+' — Dica: use Edge Function ou o painel do Supabase.')}}
+async function delUser(id){if(!PROFILE||PROFILE.role!=='admin'){toast('⛔');return}if(id===ME.id){alert('Você não pode excluir a si mesmo.');return}if(!confirm('Excluir este usuário?'))return;try{var r1=await sbAdmin.auth.admin.deleteUser(id);if(r1.error)throw r1.error;toast('✅ Usuário excluído');await loadAllData();renderUsers()}catch(e){await sb.from('profiles').delete().eq('id',id);toast('⚠️ Perfil removido. Login: '+e.message);await loadAllData();renderUsers()}}
 document.getElementById('formNewUser').addEventListener('submit',async function(e){
   e.preventDefault();
   if(!PROFILE||PROFILE.role!=='admin'){toast('⛔ Apenas admin');return}
-  var f=this;
-  var email=f.email.value.trim(),senha=f.senha.value,nome=f.nome.value.trim(),role=f.role.value;
+  var f=this;var email=f.email.value.trim(),senha=f.senha.value,nome=f.nome.value.trim(),role=f.role.value;
   var msg=$('newUserMsg');msg.style.display='none';
   if(!email||!senha){alert('Preencha e-mail e senha.');return}
   if(senha.length<6){alert('A senha precisa ter pelo menos 6 caracteres.');return}
   $('btnCreateUser').innerHTML='<span class="loader"></span> Criando...';$('btnCreateUser').disabled=true;
   try{
-    // signUp no cliente que NÃO persiste sessão -> não desloga o admin
     var res=await sbAdmin.auth.signUp({email:email,password:senha,options:{data:{nome:nome}}});
     if(res.error)throw res.error;
     var newUser=res.data.user;
-    if(!newUser)throw new Error('Usuário não criado. Verifique se "Confirm email" está desligado no Supabase.');
-    // Cria o perfil com o papel escolhido
+    if(!newUser)throw new Error('Usuário não criado. Verifique se "Confirm email" está desligado.');
     var pres=await sb.from('profiles').insert({id:newUser.id,nome:nome||email,login:email,role:role,ativo:true});
     if(pres.error)throw pres.error;
     msg.textContent='✅ Usuário '+email+' criado com perfil '+roleLabel(role)+'!';msg.style.display='block';
-    f.reset();
-    await loadAllData();renderUsers();
-  }catch(err){
-    msg.style.display='none';
-    alert('❌ '+err.message);
-  }finally{
-    $('btnCreateUser').innerHTML='➕ Criar Usuário';$('btnCreateUser').disabled=false;
-  }
+    f.reset();await loadAllData();renderUsers();
+  }catch(err){msg.style.display='none';alert('❌ '+err.message)}
+  finally{$('btnCreateUser').innerHTML='➕ Criar Usuário';$('btnCreateUser').disabled=false}
 });
-
-// --- MINHA SENHA (qualquer usuário) ---
 document.getElementById('formMinhaSenha').addEventListener('submit',async function(e){
   e.preventDefault();
   var atual=$('msAtual').value,nova=$('msNova').value,conf=$('msConfirma').value;
@@ -411,17 +380,13 @@ document.getElementById('formMinhaSenha').addEventListener('submit',async functi
   if(nova.length<6){msg.textContent='❌ A nova senha precisa ter pelo menos 6 caracteres.';msg.style.display='block';msg.style.background='#fef2f2';msg.style.color='#dc2626';return}
   if(nova!==conf){msg.textContent='❌ As novas senhas não conferem.';msg.style.display='block';msg.style.background='#fef2f2';msg.style.color='#dc2626';return}
   try{
-    // Reautentica pra confirmar a senha atual
     var r1=await sb.auth.signInWithPassword({email:ME.email,password:atual});
     if(r1.error)throw new Error('Senha atual incorreta.');
-    // Atualiza pra nova senha
     var r2=await sb.auth.updateUser({password:nova});
     if(r2.error)throw r2.error;
     msg.textContent='✅ Senha alterada com sucesso!';msg.style.display='block';msg.style.background='#dcfce7';msg.style.color='#16a34a';
     this.reset();
-  }catch(err){
-    msg.textContent='❌ '+err.message;msg.style.display='block';msg.style.background='#fef2f2';msg.style.color='#dc2626';
-  }
+  }catch(err){msg.textContent='❌ '+err.message;msg.style.display='block';msg.style.background='#fef2f2';msg.style.color='#dc2626'}
 });
 
 // --- CLIENTES ---
@@ -446,8 +411,8 @@ function renderPc(){var s=($('searchPecas')?$('searchPecas').value:'').toLowerCa
 function filterOsEquip(ci){var es=$('osEquip');if(!ci){es.innerHTML='<option value="">Selecione cliente</option>';es.disabled=true;return}var eqs=DATA.equipamentos.filter(function(e){return e.cliente_id===ci});es.innerHTML='<option value="">Selecione...</option>'+eqs.map(function(e){return'<option value="'+e.id+'">'+esc(e.serie)+' - '+esc(e.modelo)+'</option>'}).join('');es.disabled=false}
 async function renderOs(){$('osCliente').innerHTML='<option value="">Selecione...</option>'+DATA.clientes.map(function(c){return'<option value="'+c.id+'">'+esc(c.nome)+'</option>'}).join('');filterOsEquip('');$('panelOsForm').style.display=can('create_os')?'':'none';$('tbOs').innerHTML=DATA.os.map(function(o){var eq=DATA.equipamentos.find(function(e){return e.id===o.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===o.cliente_id});return'<tr class="crow" onclick="openOs(\''+o.id+'\')"><td><b>'+esc(o.numero)+'</b></td><td>'+esc(fmtD(o.data_abertura))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(o.defeito||'-')+'</td><td>'+badge(o.status)+'</td></tr>'}).join('')||'<tr><td colspan="6" class="mut">Nenhuma.</td></tr>'}
 document.getElementById('formOS').addEventListener('submit',async function(e){e.preventDefault();if(!can('create_os')){toast('⛔ Sem permissão');return}var fd=new FormData(this);var ei=$('osEquip').value,ci=$('osCliente').value;if(!ci||!ei){alert('Selecione cliente e equipamento.');return}var ano=new Date().getFullYear();var prefix='OS-'+ano+'-';var n=String((DATA.os.filter(function(o){return o.numero&&o.numero.startsWith(prefix)}).length||0)+1).padStart(4,'0');var p={numero:prefix+n,cliente_id:ci,equipamento_id:ei,tecnico:fd.get('tecnico').trim()||(PROFILE.nome||ME.email),tipo:fd.get('tipo'),prioridade:fd.get('prioridade')||'Média',status:'Aberta',defeito:fd.get('defeito').trim(),data_abertura:new Date().toISOString()};try{var res=await sb.from('ordens_servico').insert(p).select().single();if(res.error)throw res.error;toast('✅ OS '+p.numero+' criada!');await loadAllData();this.reset();filterOsEquip('');openOs(res.data.id)}catch(err){toast('❌ Erro: '+(err.message||err));console.error(err)}});
-async function openOs(id){var os=DATA.os.find(function(o){return o.id===id});if(!os)return;curOs=os;navigate('os-detail');$('detailOsNumero').textContent=os.numero;$('detailOsBadge').outerHTML=badge(os.status).replace('class="badge","id="detailOsBadge" class="badge');var eq=DATA.equipamentos.find(function(e){return e.id===os.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===os.cliente_id});var ce=can('edit_os');$('detailOsForm').innerHTML='<div><label>Cliente</label><input value="'+esc(cl?cl.nome:'-')+'" disabled></div><div><label>Equipamento</label><input value="'+esc(eq?eq.serie:'-')+'" disabled></div><div><label>Técnico</label>'+(ce?'<input value="'+esc(os.tecnico||'')+'" onchange="updOs(\'tecnico\',this.value)">':'<input value="'+esc(os.tecnico||'-')+'" disabled>')+'</div><div><label>Status</label>'+(ce?'<select onchange="updOs(\'status\',this.value)">'+['Aberta','Em análise','Aguardando peça','Em manutenção','Em teste','Concluída','Cancelada'].map(function(s){return'<option'+(os.status===s?' selected':'')+'>'+s+'</option>'}).join('')+'</select>':'<input value="'+esc(os.status)+'" disabled>')+'</div><div style="grid-column:1/-1"><label>Defeito</label><textarea disabled>'+esc(os.defeito||'')+'</textarea></div>';$('btnDelOs').style.display=can('delete_os')?'inline-block':'none';$('osDetailTabs').innerHTML='<button class="tab-btn active" onclick="switchTab(\'laudo\',this)">📝 Laudo</button><button class="tab-btn" onclick="switchTab(\'pecas-uso\',this)">🔩 Usadas</button><button class="tab-btn" onclick="switchTab(\'fotos\',this)">📸 Fotos</button><button class="tab-btn" onclick="switchTab(\'historico\',this)">📜 Hist.</button>';var lf=$('formLaudo');var cf=can('fill_laudo');for(var i=0;i<lf.elements.length;i++){if(lf.elements[i].name)lf.elements[i].disabled=!cf}$('formLaudo').querySelector('button[type=submit]').style.display=cf?'':'none';$('formAddPecaUso').style.display=can('add_peca_os')?'':'none';$('photoUploadLabel').style.display=can('upload_foto')?'':'none';var lResp=await sb.from('laudos').select('*').eq('os_id',os.id).maybeSingle();var l=(lResp&&lResp.data)||{};lf.constatado.value=l.defeito_constatado||'';lf.causa.value=l.causa||'';lf.testes.value=l.testes||'';lf.servicos.value=l.servicos||'';lf.resultado.value=l.resultado||'';renderOsPecas();renderPhotos();renderHist()}
-function updOs(f,v){if(!can('edit_os')){toast('⛔');return}sb.from('ordens_servico').update({[f]:v}).eq('id',curOs.id).then(function(){curOs[f]=v;if(f==='status')$('detailOsBadge').outerHTML=badge(v).replace('class="badge","id="detailOsBadge" class="badge')})}
+async function openOs(id){var os=DATA.os.find(function(o){return o.id===id});if(!os)return;curOs=os;navigate('os-detail');$('detailOsNumero').textContent=os.numero;$('detailOsBadge').outerHTML=badge(os.status).replace('class="badge','id="detailOsBadge" class="badge');var eq=DATA.equipamentos.find(function(e){return e.id===os.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===os.cliente_id});var ce=can('edit_os');$('detailOsForm').innerHTML='<div><label>Cliente</label><input value="'+esc(cl?cl.nome:'-')+'" disabled></div><div><label>Equipamento</label><input value="'+esc(eq?eq.serie:'-')+'" disabled></div><div><label>Técnico</label>'+(ce?'<input value="'+esc(os.tecnico||'')+'" onchange="updOs(\'tecnico\',this.value)">':'<input value="'+esc(os.tecnico||'-')+'" disabled>')+'</div><div><label>Status</label>'+(ce?'<select onchange="updOs(\'status\',this.value)">'+['Aberta','Em análise','Aguardando peça','Em manutenção','Em teste','Concluída','Cancelada'].map(function(s){return'<option'+(os.status===s?' selected':'')+'>'+s+'</option>'}).join('')+'</select>':'<input value="'+esc(os.status)+'" disabled>')+'</div><div style="grid-column:1/-1"><label>Defeito</label><textarea disabled>'+esc(os.defeito||'')+'</textarea></div>';$('btnDelOs').style.display=can('delete_os')?'inline-block':'none';$('osDetailTabs').innerHTML='<button class="tab-btn active" onclick="switchTab(\'laudo\',this)">📝 Laudo</button><button class="tab-btn" onclick="switchTab(\'pecas-uso\',this)">🔩 Usadas</button><button class="tab-btn" onclick="switchTab(\'fotos\',this)">📸 Fotos</button><button class="tab-btn" onclick="switchTab(\'historico\',this)">📜 Hist.</button>';var lf=$('formLaudo');var cf=can('fill_laudo');for(var i=0;i<lf.elements.length;i++){if(lf.elements[i].name)lf.elements[i].disabled=!cf}$('formLaudo').querySelector('button[type=submit]').style.display=cf?'':'none';$('formAddPecaUso').style.display=can('add_peca_os')?'':'none';$('photoUploadLabel').style.display=can('upload_foto')?'':'none';var lResp=await sb.from('laudos').select('*').eq('os_id',os.id).maybeSingle();var l=(lResp&&lResp.data)||{};lf.constatado.value=l.defeito_constatado||'';lf.causa.value=l.causa||'';lf.testes.value=l.testes||'';lf.servicos.value=l.servicos||'';lf.resultado.value=l.resultado||'';renderOsPecas();renderPhotos();renderHist()}
+function updOs(f,v){if(!can('edit_os')){toast('⛔');return}sb.from('ordens_servico').update({[f]:v}).eq('id',curOs.id).then(function(){curOs[f]=v;if(f==='status')$('detailOsBadge').outerHTML=badge(v).replace('class="badge','id="detailOsBadge" class="badge')})}
 function switchTab(t,btn){document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});$('tab-'+t).classList.add('active');document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});btn.classList.add('active')}
 document.getElementById('formLaudo').addEventListener('submit',async function(e){e.preventDefault();if(!can('fill_laudo')){toast('⛔');return}var fd=new FormData(this);var payload={os_id:curOs.id,defeito_constatado:fd.get('constatado').trim(),causa:fd.get('causa').trim(),testes:fd.get('testes').trim(),servicos:fd.get('servicos').trim(),resultado:fd.get('resultado')};try{var exist=await sb.from('laudos').select('id').eq('os_id',curOs.id).maybeSingle();var res;if(exist&&exist.data)res=await sb.from('laudos').update(payload).eq('id',exist.data.id);else res=await sb.from('laudos').insert(payload);if(res.error)throw res.error;toast('✅ Laudo salvo!')}catch(err){toast('❌ '+(err.message||err))}});
 async function renderOsPecas(){var res=await sb.from('os_pecas').select('*').eq('os_id',curOs.id).eq('tipo','usada');var pu=res.data||[];$('tbPecasUso').innerHTML=pu.length?pu.map(function(p){var pc=DATA.pecas.find(function(x){return x.id===p.peca_id});return'<tr><td>'+esc(pc?(pc.codigo+' - '+pc.descricao):'?')+'</td><td>'+p.qtd+'</td><td>'+(can('add_peca_os')?'<button class="bd bsm" onclick="delPU(\''+p.id+'\')">✕</button>':'')+'</td></tr>'}).join(''):'<tr><td colspan="3" class="mut">Nenhuma.</td></tr>'}

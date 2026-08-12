@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>
+/* CONFIG EMBUTIDA pelo Editor CMMS */
+(function(){
+var EMB={"tipo":"cmms_config","appName":"CMMS Datadores","supabaseUrl":"https://hkkeflqwunxhhekkmfba.supabase.co","supabaseKey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhra2VmbHF3dW54aGhla2ttZmJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjI1ODIsImV4cCI6MjEwMjAzODU4Mn0.qTagfMsaS13nt0U4GDHbPd-e3R1maOS2MzXcNhBJlbI","imgbbKey":"17dd191d5e0b3561adff73f66d2badda","logoUrl":"https://i.ibb.co/5xr7QV70/Logo-Tesla-214w.webp"};
+window.CFG_EMBUTIDA=EMB;
+try{if(!localStorage.getItem("cmms_cfg_v35")){localStorage.setItem("cmms_cfg_v35",JSON.stringify(EMB));}}catch(e){}
+document.addEventListener("DOMContentLoaded",function(){var p=document.getElementById("configPanel");if(p){var w=document.createElement("div");w.className="csec";w.innerHTML="<h3>\u21A9\uFE0F Config de F\u00E1brica</h3><button type=\"button\" class=\"bs bsm\" onclick=\"restaurarPadrao()\">\u21A9\uFE0F Restaurar config embutida</button>";p.appendChild(w);}});
+window.restaurarPadrao=function(){try{localStorage.setItem("cmms_cfg_v35",JSON.stringify(EMB));}catch(e){}location.reload();};
+})();
+</script>
+
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>CMMS Datadores</title>

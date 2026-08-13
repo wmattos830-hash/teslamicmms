@@ -116,7 +116,6 @@ th{background:#f9fafb;color:var(--mu)}
 .dropzone:hover,.dropzone.over{border-color:var(--p);background:#eff6ff;color:var(--p)}
 .bkp-summary{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:1rem;margin-top:1rem;font-size:.85rem}
 .bkp-summary b{color:var(--p)}
-/* GERENCIADOR DE FOTOS */
 .foto-wrap{display:grid;grid-template-columns:280px 1fr;gap:1rem;margin-top:1rem}
 .foto-folders{max-height:62vh;overflow-y:auto;border:1px solid var(--bd);border-radius:8px;padding:.5rem;background:var(--sf)}
 .foto-folder{display:flex;align-items:center;gap:.5rem;padding:.6rem .75rem;border-radius:8px;cursor:pointer;font-size:.85rem;border:none;background:none;width:100%;text-align:left;color:var(--tx)}
@@ -143,7 +142,7 @@ th{background:#f9fafb;color:var(--mu)}
 <div class="csec"><h3>📸 ImgBB (fotos/logo)</h3><label>API Key</label><input id="cfgImgbbKey" placeholder="chave de api.imgbb.com"><div class="hint">Grátis em api.imgbb.com</div></div>
 <div class="csec"><h3>🏷️ Personalização</h3><label>Nome da Empresa</label><input id="cfgAppName" placeholder="CMMS Datadores"><label>Logo (opcional)</label><input type="file" id="cfgLogoFile" accept="image/*"><div class="hint" id="logoStatus"></div></div>
 <div class="csec"><h3>🔁 Config Portátil</h3><button class="bi bsm" onclick="exportConfig()">📤 Exportar</button> <button class="bs bsm" onclick="document.getElementById('cfgImport').click()">📥 Importar</button><input type="file" id="cfgImport" style="display:none" accept=".json" onchange="importConfig(this)"></div>
-<button class="bp bsm" onclick="saveConfig()">💾 Salvar e Reiniciar</button>
+<button class="bp bsm" onclick="saveConfig()">💾 Salvar e Reiniciar</button> <button class="bs bsm" onclick="restaurarEmbutida()">↩️ Restaurar embutida</button>
 </div>
 </div>
 </div>
@@ -193,7 +192,6 @@ th{background:#f9fafb;color:var(--mu)}
 
 <section id="view-os-detail" class="view"><div class="fb no-print" style="margin-bottom:1rem"><button class="bs" onclick="navigate('os')">← Voltar</button><div><button class="bs" onclick="window.print()">🖨️ PDF</button> <button class="bd bsm" id="btnDelOs" onclick="delOsAtual()">Excluir</button></div></div><div class="panel"><div class="fb"><h2 id="detailOsNumero" style="margin:0;border:0;padding:0">OS</h2><span id="detailOsBadge" class="badge">Aberta</span></div><div class="fgrid" id="detailOsForm" style="margin-top:1rem"></div></div><div class="tabs no-print" id="osDetailTabs"></div><div id="tab-laudo" class="tab-content active panel"><h2>Laudo Técnico</h2><form id="formLaudo" class="fgrid"><div><label>Defeito Constatado</label><textarea name="constatado"></textarea></div><div><label>Causa</label><textarea name="causa"></textarea></div><div><label>Testes</label><textarea name="testes"></textarea></div><div><label>Serviços</label><textarea name="servicos"></textarea></div><div><label>Resultado</label><select name="resultado"><option value="">Pendente</option><option>Aprovado</option><option>Reprovado</option><option>Aguardando peça</option></select></div><div><button type="submit" class="bp">💾 Salvar Laudo</button></div></form></div><div id="tab-pecas-uso" class="tab-content panel"><h2>Peças Usadas</h2><form id="formAddPecaUso" class="fgrid" style="grid-template-columns:2fr 1fr auto;align-items:end"><div><label>Buscar Peça</label><input id="uPecaSearch" list="dlPecas" oninput="onPecaSearch(this,'uMatch')"><div id="uMatch" class="match"></div></div><div><label>Qtd</label><input type="number" id="uQtd" min="1" value="1"></div><div><button class="bg bsm" onclick="addPecaUso()">Registrar</button></div></form><div class="twrap"><table><thead><tr><th>Peça</th><th>Qtd</th><th></th></tr></thead><tbody id="tbPecasUso"></tbody></table></div></div><div id="tab-fotos" class="tab-content panel"><h2>Fotos</h2><div class="pgrid" id="photoGrid"><label class="pupload" id="photoUploadLabel"><input type="file" accept="image/*" multiple onchange="addPhotos(this)"><span style="font-size:2rem">📷</span><span style="font-size:.8rem">Adicionar</span></label></div></div><div id="tab-historico" class="tab-content panel"><h2>📜 Histórico</h2><div id="historicoTimeline"></div></div></section>
 
-<!-- GERENCIADOR DE FOTOS -->
 <section id="view-fotos" class="view">
 <div class="panel">
 <div class="fb"><h2 style="margin:0;border:0;padding:0">📸 Gerenciador de Fotos</h2>
@@ -286,8 +284,14 @@ th{background:#f9fafb;color:var(--mu)}
 <div id="toast" class="toast" style="display:none"></div>
 
 <script>
-var K_CFG='cmms_cfg_v38';
-var CFG=JSON.parse(localStorage.getItem(K_CFG)||'{}');
+var K_CFG='cmms_cfg_v39';
+// CONFIG: 1) override manual (localStorage) → 2) EMBUTIDA (editor) → 3) vazio
+var CFG=(function(){
+  var saved=null;try{saved=JSON.parse(localStorage.getItem(K_CFG)||'null')}catch(e){}
+  if(saved&&(saved.supabaseUrl||saved.supabaseKey||saved.imgbbKey))return saved;
+  if(window.CFG_EMBUTIDA)return window.CFG_EMBUTIDA;
+  return saved||{};
+})();
 var sb=null,sbAdmin=null,ME=null,PROFILE=null,PERMS=null;
 var DATA={clientes:[],equipamentos:[],pecas:[],os:[],visitas:[],profiles:[],fotos:[]};
 var curOs=null,curEditVisita=null,tmpPecas=[];
@@ -322,13 +326,14 @@ window.onload=async function(){
     }catch(e){console.error(e)}
   }else{$('btnLogin').disabled=true}
 };
-function toggleConfig(){$('configPanel').classList.toggle('active');$('cfgSupabaseUrl').value=CFG.supabaseUrl||'';$('cfgSupabaseKey').value=CFG.supabaseKey||'';$('cfgImgbbKey').value=CFG.imgbbKey||'';$('cfgAppName').value=CFG.appName||'';$('logoStatus').textContent=CFG.logoUrl?'✅ Logo atual':''}
+function toggleConfig(){$('configPanel').classList.toggle('active');$('cfgSupabaseUrl').value=CFG.supabaseUrl||'';$('cfgSupabaseKey').value=CFG.supabaseKey||'';$('cfgImgbbKey').value=CFG.imgbbKey||'';$('cfgAppName').value=CFG.appName||'';$('logoStatus').textContent=CFG.logoUrl?'✅ Logo atual (embutida)':''}
 async function saveConfig(){
   CFG.supabaseUrl=$('cfgSupabaseUrl').value.trim();CFG.supabaseKey=$('cfgSupabaseKey').value.trim();CFG.imgbbKey=$('cfgImgbbKey').value.trim();CFG.appName=$('cfgAppName').value.trim()||'CMMS Datadores';
   var f=$('cfgLogoFile').files[0];
   if(f&&CFG.imgbbKey){toast('⏳ Enviando logo...');var url=await uploadToImgBB(f);if(url){CFG.logoUrl=url;toast('✅ Logo enviada')}}
   localStorage.setItem(K_CFG,JSON.stringify(CFG));location.reload();
 }
+function restaurarEmbutida(){localStorage.removeItem(K_CFG);location.reload()}
 function exportConfig(){var out={tipo:'cmms_config',appName:CFG.appName,supabaseUrl:CFG.supabaseUrl,supabaseKey:CFG.supabaseKey,imgbbKey:CFG.imgbbKey,logoUrl:CFG.logoUrl};var b=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cmms-config.json';a.click();toast('📤 Exportado')}
 function importConfig(inp){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var d=JSON.parse(e.target.result);localStorage.setItem(K_CFG,JSON.stringify(d));location.reload()}catch(err){alert('Erro: '+err.message)}};r.readAsText(f)}
 function applyVisual(){var n=CFG.appName||'CMMS Datadores';document.title=n;['loginAppName','sidebarAppName','mobileAppName'].forEach(id=>{var e=$(id);if(e)e.textContent=(id==='loginAppName'?'🔧 ':'')+n});if(CFG.logoUrl){['loginLogo','sidebarLogo','mobileLogo'].forEach(id=>{var e=$(id);if(e){e.src=CFG.logoUrl;e.style.display='block'}})}}
@@ -397,7 +402,6 @@ function rebuildDatalist(){$('dlPecas').innerHTML=DATA.pecas.map(function(p){ret
 function findPiece(t){if(!t)return null;t=t.trim().toLowerCase();var P=DATA.pecas,i;for(i=0;i<P.length;i++){if((P[i].codigo||'').toLowerCase()===t)return P[i]}for(i=0;i<P.length;i++){if((P[i].ref||'').toLowerCase()===t)return P[i]}for(i=0;i<P.length;i++){if((P[i].codigo||'').toLowerCase().indexOf(t)>=0)return P[i]}for(i=0;i<P.length;i++){if((P[i].ref||'').toLowerCase().indexOf(t)>=0)return P[i]}for(i=0;i<P.length;i++){if(P[i].descricao.toLowerCase().indexOf(t)>=0)return P[i]}return null}
 function onPecaSearch(inp,mid){var d=$(mid);var p=findPiece(inp.value);if(p){d.textContent='✅ '+(p.ref?p.ref+' | ':'')+p.codigo+' — '+p.descricao;d.classList.add('visible');d.setAttribute('data-id',p.id)}else{d.textContent=inp.value.trim()?'❌ Não encontrada':'';d.classList.toggle('visible',!!inp.value.trim());d.removeAttribute('data-id')}}
 
-// --- GERENCIADOR DE FOTOS ---
 function fotoInfo(f){var os=DATA.os.find(function(o){return o.id===f.os_id})||{};var eq=DATA.equipamentos.find(function(e){return e.id===os.equipamento_id})||{};var cl=DATA.clientes.find(function(c){return c.id===os.cliente_id})||{};return{os:os,eq:eq,cl:cl}}
 function setFotoGroup(v){fotoGroupBy=v;fotoCurrentGroup=null;renderFotos()}
 function selectFotoGroup(k){fotoCurrentGroup=k;renderFotos()}
@@ -533,7 +537,6 @@ function renderDash(){var os=DATA.os;$('dashCards').innerHTML=[['Clientes',DATA.
 function applyFilters(){var st=$('fltStatus').value,tc=$('fltTecnico').value,ci=$('fltCliente').value;var f=DATA.os.filter(function(o){if(st&&o.status!==st)return false;if(tc&&o.tecnico!==tc)return false;if(ci&&o.cliente_id!==ci)return false;return true});$('tbReport').innerHTML=f.length?f.map(function(o){var eq=DATA.equipamentos.find(function(e){return e.id===o.equipamento_id});var cl=DATA.clientes.find(function(c){return c.id===o.cliente_id});return'<tr class="crow" onclick="openOs(\''+o.id+'\')"><td>'+esc(o.numero)+'</td><td>'+esc(fmtDS(o.data_abertura))+'</td><td>'+esc(cl?cl.nome:'-')+'</td><td>'+esc(eq?eq.serie:'-')+'</td><td>'+esc(o.defeito||'-')+'</td><td>'+badge(o.status)+'</td></tr>'}).join(''):'<tr><td colspan="6" class="mut">Nenhuma.</td></tr>'}
 function clearFilters(){$('fltStatus').value='';$('fltTecnico').value='';$('fltCliente').value='';applyFilters()}
 
-// --- BACKUP ---
 function renderBackup(){
   updBkpCounts();
   $('btnExportBkp').style.display=can('export_backup')?'':'none';
@@ -561,7 +564,7 @@ async function doExport(){
   if(!can('export_backup')){alert('Sem permissão para exportar backup.');return}
   var sel=getSelectedBkp();
   if(!sel.length){alert('Marque ao menos um item para exportar.');return}
-  var out={tipo:'cmms_backup',versao:'v38',gerado_em:new Date().toISOString(),itens:{}};
+  var out={tipo:'cmms_backup',versao:'v39',gerado_em:new Date().toISOString(),itens:{}};
   if(sel.indexOf('usuarios')>=0){out.config=CFG;out.permissoes=PERMS}
   if(sel.indexOf('os')>=0)out.itens.ordens_servico=DATA.os;
   if(sel.indexOf('clientes')>=0)out.itens.clientes=DATA.clientes;

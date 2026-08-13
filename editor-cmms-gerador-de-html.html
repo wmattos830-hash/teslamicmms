@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🛠️ Editor CMMS — Gerador de HTML</title>
+<style>
+:root{--p:#2563eb;--bg:#f3f4f6;--sf:#fff;--bd:#e5e7eb;--tx:#111827;--mu:#6b7280;--ok:#16a34a;--err:#dc2626}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.5;padding:2rem 1rem}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:1.6rem;margin:0 0 .25rem}
+.sub{color:var(--mu);margin:0 0 1.5rem}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{margin:0 0 .25rem;font-size:1.05rem}
+.card .hint{color:var(--mu);font-size:.8rem;margin:0 0 1rem}
+label{display:block;font-size:.8rem;font-weight:600;margin:.75rem 0 .25rem}
+input[type=text],input[type=url]{width:100%;padding:.6rem;border:1px solid var(--bd);border-radius:6px;font:inherit}
+.row{display:flex;gap:.5rem;align-items:center}
+.row input{flex:1}
+button{font:inherit;cursor:pointer;border:none;border-radius:6px;padding:.6rem 1rem;font-weight:600}
+.bp{background:var(--p);color:#fff}.bp:hover{background:#1d4ed8}
+.bs{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+.big{width:100%;padding:.9rem;font-size:1rem}
+.prev{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:1rem;margin-top:1rem;font-size:.85rem;display:none}
+.prev.show{display:block}
+.prev .item{display:flex;gap:.5rem;align-items:center;margin:.25rem 0}
+.prev img{max-height:40px;border-radius:4px;border:1px solid var(--bd)}
+.ok{color:var(--ok);font-weight:700}.err{color:var(--err);font-weight:700}
+.chk{display:flex;gap:.5rem;align-items:center;margin:.75rem 0;font-size:.85rem}
+.chk input{width:auto}
+.status{margin-top:.75rem;font-size:.85rem;display:none}
+.status.show{display:block}
+.tag{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-size:.7rem;font-weight:700;background:#e0e7ff;color:#3730a3}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🛠️ Editor CMMS</h1>
+<p class="sub">Gera o HTML do CMMS já configurado, pronto para hospedar. <span class="tag">standalone</span></p>
+
+<div class="card">
+<h2>1️⃣ Template do CMMS</h2>
+<p class="hint">Aponte para o seu <b>cmms-v35.html</b> (URL hospedada ou arquivo local).</p>
+<label>URL do template</label>
+<div class="row"><input type="url" id="tplUrl" placeholder="https://seu-repo.github.io/cmms-v35.html"></div>
+<label>…ou carregue o arquivo</label>
+<input type="file" id="tplFile" accept=".html" onchange="loadTplFile(this)">
+<div class="status" id="tplStatus"></div>
+</div>
+
+<div class="card">
+<h2>2️⃣ Configuração (cmms-config.json)</h2>
+<p class="hint">Cole a URL do JSON da filial ou carregue o arquivo.</p>
+<label>URL do cmms-config.json</label>
+<div class="row"><input type="url" id="cfgUrl" placeholder="https://seu-repo.github.io/cmms-config.json"><button class="bs" onclick="loadCfgUrl()">Carregar</button></div>
+<label>…ou carregue o arquivo</label>
+<input type="file" id="cfgFile" accept=".json" onchange="loadCfgFile(this)">
+<div class="prev" id="cfgPrev"></div>
+</div>
+
+<div class="card">
+<h2>3️⃣ Opções & Geração</h2>
+<label>Nome do arquivo de saída</label>
+<input type="text" id="outName" value="cmms.html">
+<label class="chk"><input type="checkbox" id="testConn"> Testar conexão com o Supabase antes de gerar</label>
+<div class="status" id="genStatus"></div>
+<button class="bp big" style="margin-top:1rem" onclick="generate()">🚀 Gerar CMMS Configurado</button>
+</div>
+</div>
+
+<script>
+var TPL=null, CFG=null;
+
+function setStatus(id,html,cls){var e=document.getElementById(id);e.innerHTML=html;e.className='status show '+(cls||'');}
+
+// --- TEMPLATE ---
+async function loadTplUrl(){
+  var url=document.getElementById('tplUrl').value.trim();
+  if(!url){setStatus('tplUrl','Informe a URL.','err');return}
+  try{
+    var r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    TPL=await r.text();
+    if(TPL.indexOf('id="appShell"')<0)throw new Error('Não parece um HTML do CMMS.');
+    setStatus('tplStatus','✅ Template carregado ('+Math.round(TPL.length/1024)+' KB).','ok');
+  }catch(e){setStatus('tplStatus','❌ '+e.message,'err')}
+}
+function loadTplFile(inp){
+  var f=inp.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){TPL=e.target.result;
+    if(TPL.indexOf('id="appShell"')<0){setStatus('tplStatus','❌ Não parece um HTML do CMMS.','err');return}
+    setStatus('tplStatus','✅ Template carregado ('+Math.round(TPL.length/1024)+' KB).','ok');};
+  r.readAsText(f);
+}
+document.getElementById('tplUrl').addEventListener('change',loadTplUrl);
+
+// --- CONFIG ---
+function showCfgPrev(){
+  var p=document.getElementById('cfgPrev');
+  if(!CFG){p.className='prev';return}
+  var logo=CFG.logoUrl?'<img src="'+CFG.logoUrl+'">':'<span class="err">sem logo</span>';
+  p.innerHTML=
+    '<div class="item">🏢 <b>'+esc(CFG.appName||'CMMS')+'</b></div>'+
+    '<div class="item">☁️ Supabase: <span class="'+(CFG.supabaseUrl?'ok':'err')+'">'+(CFG.supabaseUrl?esc(short(CFG.supabaseUrl)):'não configurado')+'</span></div>'+
+    '<div class="item">📸 ImgBB: <span class="'+(CFG.imgbbKey?'ok':'err')+'">'+(CFG.imgbbKey?'configurado':'não configurado')+'</span></div>'+
+    '<div class="item">🖼️ Logo: '+logo+'</div>';
+  p.className='prev show';
+}
+function short(u){return u.replace('https://','').slice(0,28)+'…'}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+async function loadCfgUrl(){
+  var url=document.getElementById('cfgUrl').value.trim();
+  if(!url){alert('Informe a URL do JSON.');return}
+  try{var r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);CFG=await r.json();showCfgPrev();}
+  catch(e){alert('❌ '+e.message)}
+}
+function loadCfgFile(inp){
+  var f=inp.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){try{CFG=JSON.parse(e.target.result);showCfgPrev();}catch(err){alert('❌ '+err.message)}};
+  r.readAsText(f);
+}
+
+// --- GERAÇÃO ---
+function buildInjected(cfg){
+  var json=JSON.stringify(cfg);
+  return '<scr'+'ipt>\n/* CONFIG EMBUTIDA pelo Editor CMMS */\n(function(){\nvar EMB='+json+';\nwindow.CFG_EMBUTIDA=EMB;\ntry{if(!localStorage.getItem("cmms_cfg_v35")){localStorage.setItem("cmms_cfg_v35",JSON.stringify(EMB));}}catch(e){}\ndocument.addEventListener("DOMContentLoaded",function(){var p=document.getElementById("configPanel");if(p){var w=document.createElement("div");w.className="csec";w.innerHTML="<h3>\\u21A9\\uFE0F Config de F\\u00E1brica</h3><button type=\\"button\\" class=\\"bs bsm\\" onclick=\\"restaurarPadrao()\\">\\u21A9\\uFE0F Restaurar config embutida</button>";p.appendChild(w);}});\nwindow.restaurarPadrao=function(){try{localStorage.setItem("cmms_cfg_v35",JSON.stringify(EMB));}catch(e){}location.reload();};\n})();\n</scr'+'ipt>\n';
+}
+async function generate(){
+  var st=document.getElementById('genStatus');
+  if(!TPL){st.innerHTML='❌ Carregue o template primeiro.';st.className='status show err';return}
+  if(!CFG){st.innerHTML='❌ Carregue a config primeiro.';st.className='status show err';return}
+  if(document.getElementById('testConn').checked && CFG.supabaseUrl){
+    st.innerHTML='⏳ Testando conexão…';st.className='status show';
+    try{
+      var r=await fetch(CFG.supabaseUrl.replace(/\/$/,'')+'/rest/v1/clientes?select=id&limit=1',{headers:{apikey:CFG.supabaseKey,Authorization:'Bearer '+CFG.supabaseKey}});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      st.innerHTML='✅ Conexão OK.';st.className='status show ok';
+    }catch(e){st.innerHTML='❌ Falha na conexão: '+e.message;st.className='status show err';return}
+  }
+  var injected=buildInjected(CFG);
+  var out=TPL.replace('<head>','<head>\n'+injected);
+  var name=document.getElementById('outName').value.trim()||'cmms.html';
+  if(!/\.html?$/i.test(name))name+='.html';
+  var blob=new Blob([out],{type:'text/html'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  URL.revokeObjectURL(a.href);
+  st.innerHTML='✅ Gerado: <b>'+esc(name)+'</b> ('+Math.round(out.length/1024)+' KB). Hospede e use!';st.className='status show ok';
+}
+</script>
+</body>
+</html>
